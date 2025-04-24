@@ -51,8 +51,9 @@ def create():
     boundary_conditions_dropdown.grid(row=6, column=1)
 
     #start button
-    from main import main_simulation 
-    start_button = Button(root, text="Start", command=main_simulation)
+    #from main import main_simulation 
+    #start_button = Button(root, text="Start", command=main_simulation)
+    start_button = Button(root, text="Start", command=lambda: __import__('main').main_simulation())
     start_button.grid(row=16, column=0, columnspan=2)
 
 

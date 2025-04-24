@@ -5,14 +5,14 @@
 #inclusions
 import interface.gui as gui
 from mesh.meshgen import meshgen 
+import data.dataStorage
 
 # declarations
 # main function, called on button press in gui
 def main_simulation():
-    width = gui.get_width()
-    height = gui.get_height()
-    boundary = gui.get_boundary_condition()
-    print(f"Starting simulation with width={width}, height={height}, boundary={boundary}")
+    Data = data.dataStorage.Data()
+    Data.setSize(gui.get_width(), gui.get_height(), gui.get_boundary_condition())
+    print(f"Starting simulation with width={Data.getWidth()}, height={Data.getHeight()}, boundary={Data.getBoundary()}")
     meshgen()
 
 

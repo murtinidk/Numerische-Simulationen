@@ -13,5 +13,6 @@ Unsere Gruppennummer ist 6.
 Derzeitiger Stand (24.04.25):
 -Simples GUI integriert
 -Framework Mesh Generation 
+-Data class erstellt, bitte bei bedarf erweitern
 
 TODO:

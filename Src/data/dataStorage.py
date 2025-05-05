@@ -13,6 +13,10 @@ class DataClass:
         self.boundary = None
         self.hasMesh = False
         self.mesh = None
+        self.hasIEN = False
+        self.IEN = None
+        self.hasNE = False
+        self.NE = None
         
     def reset(self):
         if self.hasSize:
@@ -51,3 +55,55 @@ class DataClass:
         if(not self.hasMesh):
             raise Exception("Mesh not set!")
         return self.mesh
+    
+    #Knotengleichungsarray in:"Globale Knotennummer" out:"Gleichungs id"
+    def setNE(self, NE):
+        if(self.hasNE):
+            raise Exception("NE already set!")
+        self.NE = NE
+        self.hasNE = True
+        interface.gui.updateGui()
+    def hasNE(self):
+        return self.hasNE
+    def getNE(self):
+        if(not self.hasNE):
+            raise Exception("NE not set!")
+        return self.NE
+    def getNEof(self, A):
+        if(not self.hasNE):
+            raise Exception("NE not set, when accessing element!")
+        if(not A in self.NE):
+            raise Exception("A not in NE!")
+        return self.NE[A]
+    
+    #Elementknotenarray in:"a=lokale Knotennummer, c=Elementnummer" out:"globale Knotennummer"
+    def setIEN(self, IEN):
+        if(self.hasIEN):
+            raise Exception("IEN already set!")
+        self.IEN = IEN
+        self.hasIEN = True
+        interface.gui.updateGui()
+    def hasIEN(self):
+        return self.hasIEN
+    def getIEN(self):
+        if(not self.hasIEN):
+            raise Exception("IEN not set!")
+        return self.IEN
+    def getIENof(self, a, c):
+        if(not self.hasIEN):
+            raise Exception("IEN not set, when accessing element!")
+        if(not (a,c) in self.IEN):
+            raise Exception("(a, c) not in IEN!")
+        return self.IEN[(a, c)]
+    
+    #Gleichungsarray in:"a=lokale Knotennummer, c=Elementnummer" out:"Gleichungs id"
+    def getEQof(self, a, c):
+        return self.getNEof(self.getIENof(a, c))
+
+    #number of elements
+    def getNe(self):
+        raise NotImplemented
+        
+    #number of nodes in element
+    def getNen(self):
+        return 4

@@ -1,4 +1,3 @@
-
 class Node:
     def __init__(self, index, realX, realY):
         self.index = index

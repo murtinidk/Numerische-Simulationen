@@ -3,8 +3,8 @@ from tkinter import *
 width = None
 height = None
 boundary_conditions_str = None
-meshHeight = 600
-meshWidth = 600
+meshHeight = 1000
+meshWidth = 1000
 
 
 def get_width():
@@ -33,7 +33,7 @@ def create():
     #main window
     root = Tk()
     root.title("Numerische Simulationen: FEM Simulation")
-    root.geometry("1000x800")
+    root.geometry("1500x1200")
 
     #create input for mesh width and height
     Label(root, text="Width:").grid(row=0, column=0)
@@ -78,13 +78,23 @@ def updateGui():
             drawNode(node)
         
 def drawNode(node):
+    from main import Data
     global meshCanvas, meshWidth, meshHeight
     #draw a node in the mesh
-    margin = 20
+    margin = 80
     nodeRadius = 3
     
     x, y = node.GetCoordinates()
     x = int(x * (meshWidth - 2 * margin) + margin)
     y = int(y * (meshWidth - 2 * margin) + margin)
     meshCanvas.create_oval(x-nodeRadius, y-nodeRadius, x+nodeRadius, y+nodeRadius, fill="black")
-    meshCanvas.create_text(x + 7, y - 10, text= node.GetIndex(), fill="black", font="Arial 8")
+
+    meshCanvas.create_text(x + nodeRadius, y - nodeRadius, text= "id:" + str(node.GetIndex()), fill="black", font="Arial 8", anchor=SW)
+
+    EQid = None
+    try:
+        EQid = "EQid:" + str(Data.getNEof( node.GetIndex()))
+    except Exception as error:
+        EQid = error.__str__()
+    finally:
+        meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= EQid, fill="black", font="Arial 8", anchor=NW, width=70)

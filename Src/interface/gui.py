@@ -24,11 +24,18 @@ def get_height():
 def get_boundary_condition():
     return boundary_conditions_str.get()
 
+def get_resolution():
+    try:
+        return int(resolution.get())
+    except ValueError:
+        #return default if invalid
+        return 10
+
 
 
 
 def create():
-    global width, height, boundary_conditions_str, meshHeight, meshWidth, meshCanvas
+    global width, height, boundary_conditions_str, resolution, meshHeight, meshWidth, meshCanvas
     
     #main window
     root = Tk()
@@ -45,6 +52,11 @@ def create():
     height = Entry(root)
     height.insert(0, "10")
     height.grid(row=1, column=1)
+
+    Label(root, text="Resolution:").grid(row=2, column=0)
+    height = Entry(root)
+    height.insert(0, "10")
+    height.grid(row=2, column=1)
 
     Label(root, text="Boundary Conditions:").grid(row=6, column=0)
     boundary_conditions_str = StringVar(root)

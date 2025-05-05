@@ -85,8 +85,8 @@ def drawNode(node):
     nodeRadius = 3
     
     x, y = node.GetCoordinates()
-    x = int(x * (meshWidth - 2 * margin) + margin)
-    y = int(y * (meshWidth - 2 * margin) + margin)
+    x = int(x / Data.getWidth() * (meshWidth - 2 * margin) + margin)
+    y = int(y / Data.getHeight() * (meshWidth - 2 * margin) + margin)
     meshCanvas.create_oval(x-nodeRadius, y-nodeRadius, x+nodeRadius, y+nodeRadius, fill="black")
 
     meshCanvas.create_text(x + nodeRadius, y - nodeRadius, text= "id:" + str(node.GetIndex()), fill="black", font="Arial 8", anchor=SW)

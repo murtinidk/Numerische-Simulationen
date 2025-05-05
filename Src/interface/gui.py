@@ -54,9 +54,9 @@ def create():
     height.grid(row=1, column=1)
 
     Label(root, text="Resolution:").grid(row=2, column=0)
-    height = Entry(root)
-    height.insert(0, "10")
-    height.grid(row=2, column=1)
+    resolution = Entry(root)
+    resolution.insert(0, "10")
+    resolution.grid(row=2, column=1)
 
     Label(root, text="Boundary Conditions:").grid(row=6, column=0)
     boundary_conditions_str = StringVar(root)

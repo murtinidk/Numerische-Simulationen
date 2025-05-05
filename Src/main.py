@@ -2,6 +2,16 @@
 #- Numerische Simulationen für Digital Engineering, SS 2025
 #- Gruppe 6: Ram Abhay, Figo Tobias, Thalmayr Martin
 
+# x = Width
+# y = Heigt
+# 0 = oben links
+#   ----> x
+#  |
+#  |
+# \/
+#  y
+
+
 #inclusions
 import interface.gui as gui
 import data.dataStorage as data

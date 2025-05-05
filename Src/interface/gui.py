@@ -27,7 +27,7 @@ def get_boundary_condition():
 def get_xResolution():
     assert(int(xResolution.get()) > 0)
     try:
-        return int(xResolution.get())
+        return int(xResolution.get()) + 1
     except ValueError:
         #return default if invalid
         return 10
@@ -35,7 +35,7 @@ def get_xResolution():
 def get_yResolution():
     assert(int(yResolution.get()) > 0)
     try:
-        return int(yResolution.get())
+        return int(yResolution.get()) + 1
     except ValueError:
         #return default if invalid
         return 10
@@ -44,7 +44,7 @@ def get_yResolution():
 
 
 def create():
-    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas
+    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh
     
     #main window
     root = Tk()
@@ -79,6 +79,13 @@ def create():
     boundary_conditions_dropdown = OptionMenu(root, boundary_conditions_str, "dirichlet", "neumann")
     boundary_conditions_dropdown.grid(row=6, column=1)
 
+    
+    drawMesh = IntVar()
+    Label(root, text="draw Mesh:").grid(row=2, column=2)
+    drawMeshButton = Checkbutton(root, variable=drawMesh)
+    drawMeshButton.select()
+    drawMeshButton.grid(row=2, column=3)
+
     #start button
     #from main import main_simulation 
     #start_button = Button(root, text="Start", command=main_simulation)
@@ -99,10 +106,11 @@ def updateGui():
     global width, height, boundary_conditions_str, meshCanvas
     if Data.hasMesh:
         #update the mesh in the gui
-        mesh = Data.getMesh()
         meshCanvas.delete("all")
-        for node in mesh:
-            drawNode(node)
+        if(drawMesh.get()):
+            mesh = Data.getMesh()
+            for node in mesh:
+                drawNode(node)
         
 def drawNode(node):
     from main import Data

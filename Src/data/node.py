@@ -1,6 +1,6 @@
 class Node:
     def __init__(self, index, realX, realY):
-        self.index = index
+        self.index = int(index)
         self.realX = realX
         self.realY = realY
         self.boundary = None  # Default value for boundary nodes

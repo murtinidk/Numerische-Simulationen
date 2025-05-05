@@ -12,6 +12,7 @@ def get_width():
         return int(width.get())
     except ValueError:
         #return default if invalid
+        print("not a valid width input, reverting to default value 10")
         return 10
 
 def get_height():
@@ -19,6 +20,7 @@ def get_height():
         return int(height.get())
     except ValueError:
         #return default if invalid
+        print("not a valid height input, reverting to default value 10")
         return 10
         
 def get_boundary_condition():

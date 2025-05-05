@@ -22,7 +22,6 @@ def meshgen():
     coords_height, coords_width = np.meshgrid(np.linspace(0.0, height - (height/resolution), resolution), np.linspace(0.0, width - (width/resolution), resolution))
     coords = np.vstack([coords_height.ravel(), coords_width.ravel()]).T
     for i in coords:
-        print(i)
         mesh.append(node.Node(index, i[1], i[0]))
         index += 1
     """"

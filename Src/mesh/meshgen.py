@@ -19,7 +19,7 @@ def meshgen():
     resolution = Data.getResolution()
     res_height = round(height*resolution)
     res_width = round(width*resolution)
-    coords_height, coords_width = np.meshgrid(np.linspace(0.0, height - (height/resolution), resolution), np.linspace(0.0, width - (width/resolution), resolution))
+    coords_height, coords_width = np.meshgrid(np.linspace(0.0, height, resolution), np.linspace(0.0, width, resolution))
     coords = np.vstack([coords_height.ravel(), coords_width.ravel()]).T
     for i in coords:
         mesh.append(node.Node(index, i[1], i[0]))

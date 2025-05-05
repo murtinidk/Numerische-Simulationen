@@ -3,6 +3,8 @@ from tkinter import *
 width = None
 height = None
 boundary_conditions_str = None
+meshHeight = 600
+meshWidth = 600
 
 
 def get_width():
@@ -26,12 +28,12 @@ def get_boundary_condition():
 
 
 def create():
-    global width, height, boundary_conditions_str
+    global width, height, boundary_conditions_str, meshHeight, meshWidth, meshCanvas
     
     #main window
     root = Tk()
     root.title("Numerische Simulationen: FEM Simulation")
-    root.geometry("800x600")
+    root.geometry("1000x800")
 
     #create input for mesh width and height
     Label(root, text="Width:").grid(row=0, column=0)
@@ -51,16 +53,38 @@ def create():
     boundary_conditions_dropdown.grid(row=6, column=1)
 
     #start button
-    from main import main_simulation 
-    start_button = Button(root, text="Start", command=main_simulation)
+    #from main import main_simulation 
+    #start_button = Button(root, text="Start", command=main_simulation)
+    start_button = Button(root, text="Start", command=lambda: __import__('main').main_simulation())
     start_button.grid(row=16, column=0, columnspan=2)
-
+    
+    
+    meshCanvas = Canvas(root, width=meshWidth, height=meshHeight, bg="lightgrey")
+    meshCanvas.grid(row=30, column=1, columnspan=2)
 
     #tkinter loop
     root.mainloop()
     #todo: add quit function, maybe in main.py?
     #for freeing resources, maybe add a quit button to the gui
     
-
-
-
+def updateGui():
+    from main import Data
+    global width, height, boundary_conditions_str, meshCanvas
+    if Data.hasMesh:
+        #update the mesh in the gui
+        mesh = Data.getMesh()
+        meshCanvas.delete("all")
+        for node in mesh:
+            drawNode(node)
+        
+def drawNode(node):
+    global meshCanvas, meshWidth, meshHeight
+    #draw a node in the mesh
+    margin = 20
+    nodeRadius = 3
+    
+    x, y = node.GetCoordinates()
+    x = int(x * (meshWidth - 2 * margin) + margin)
+    y = int(y * (meshWidth - 2 * margin) + margin)
+    meshCanvas.create_oval(x-nodeRadius, y-nodeRadius, x+nodeRadius, y+nodeRadius, fill="black")
+    meshCanvas.create_text(x + 7, y - 10, text= node.GetIndex(), fill="black", font="Arial 8")

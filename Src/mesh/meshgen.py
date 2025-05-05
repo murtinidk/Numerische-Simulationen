@@ -23,7 +23,7 @@ def meshgen():
     coords = np.vstack([coords_height.ravel(), coords_width.ravel()]).T
     for i in coords:
         print(i)
-        mesh.append(node.Node(index, i[0], i[1]))
+        mesh.append(node.Node(index, i[1], i[0]))
         index += 1
     """"
     for x in range( Data.getWidth()):

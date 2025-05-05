@@ -10,7 +10,8 @@ class DataClass:
         self.hasSize = False
         self.width = None	
         self.height = None
-        self.resolution = None
+        self.xResolution = None
+        self.yResolution = None
         self.boundary = None
         self.hasMesh = False
         self.mesh = None
@@ -23,10 +24,11 @@ class DataClass:
         if self.hasSize:
             self.__init__()
     
-    def setSize(self, width, height, boundary, resolution):
+    def setSize(self, width, height, boundary, xResolution, yResolution):
         self.width = width
         self.height = height
-        self.resolution = resolution
+        self.xResolution = xResolution
+        self.yResolution = yResolution
         self.boundary = boundary
         self.hasSize = True
     
@@ -40,10 +42,14 @@ class DataClass:
         if(not self.hasSize):
             raise Exception("Size not set!")
         return self.height
-    def getResolution(self):
+    def getXResolution(self):
         if(not self.hasSize):
             raise Exception("Size not set!")
-        return self.resolution
+        return self.xResolution
+    def getYResolution(self):
+        if(not self.hasSize):
+            raise Exception("Size not set!")
+        return self.yResolution
     def getBoundary(self):
         if(not self.hasSize):
             raise Exception("Size not set!")

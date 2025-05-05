@@ -24,9 +24,18 @@ def get_height():
 def get_boundary_condition():
     return boundary_conditions_str.get()
 
-def get_resolution():
+def get_xResolution():
+    assert(int(xResolution.get()) > 0)
     try:
-        return int(resolution.get())
+        return int(xResolution.get())
+    except ValueError:
+        #return default if invalid
+        return 10
+
+def get_yResolution():
+    assert(int(yResolution.get()) > 0)
+    try:
+        return int(yResolution.get())
     except ValueError:
         #return default if invalid
         return 10
@@ -35,7 +44,7 @@ def get_resolution():
 
 
 def create():
-    global width, height, boundary_conditions_str, resolution, meshHeight, meshWidth, meshCanvas
+    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas
     
     #main window
     root = Tk()
@@ -53,10 +62,16 @@ def create():
     height.insert(0, "10")
     height.grid(row=1, column=1)
 
-    Label(root, text="Resolution:").grid(row=2, column=0)
-    resolution = Entry(root)
-    resolution.insert(0, "10")
-    resolution.grid(row=2, column=1)
+    Label(root, text="Width Resolution:").grid(row=0, column=2)
+    xResolution = Entry(root)
+    xResolution.insert(0, "10")
+    xResolution.grid(row=0, column=3)
+    
+
+    Label(root, text="Height Resolution:").grid(row=1, column=2)
+    yResolution = Entry(root)
+    yResolution.insert(0, "10")
+    yResolution.grid(row=1, column=3)
 
     Label(root, text="Boundary Conditions:").grid(row=6, column=0)
     boundary_conditions_str = StringVar(root)
@@ -97,7 +112,6 @@ def drawNode(node):
     nodeRadius = 3
     
     x, y = node.GetCoordinates()
-    print(x, y)
     largestSize = max(Data.getWidth(), Data.getHeight())
     x += (largestSize - Data.getWidth()) / 2
     y += (largestSize - Data.getHeight()) / 2

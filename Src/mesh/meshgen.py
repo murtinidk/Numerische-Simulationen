@@ -16,21 +16,30 @@ def meshgen():
     index = 0
     width = Data.getWidth()
     height = Data.getHeight()
-    resolution = Data.getResolution()
-    res_height = round(height*resolution)
-    res_width = round(width*resolution)
-    coords_height, coords_width = np.meshgrid(np.linspace(0.0, height, resolution), np.linspace(0.0, width, resolution))
+    xResolution = Data.getXResolution()
+    yResolution = Data.getYResolution()
+    res_width = round(width*xResolution)
+    res_height = round(height*yResolution)
+    coords_height, coords_width = np.meshgrid(np.linspace(0.0, height, yResolution), np.linspace(0.0, width, xResolution))
     coords = np.vstack([coords_height.ravel(), coords_width.ravel()]).T
     for i in coords:
         mesh.append(node.Node(index, i[1], i[0]))
         index += 1
-    """"
-    for x in range( Data.getWidth()):
-        for y in range(0, Data.getHeight()):
-            mesh.append(node.Node(index, float(x)/ (Data.getWidth()-1), float(y)/ (Data.getHeight()-1)))
-            index += 1
-    """
+
     Data.setMesh(mesh)
-    print(f"Mesh generated with width={Data.getWidth()}, height={Data.getHeight()}, resolution={Data.getResolution()}, boundary={Data.getBoundary()}")
+
+    #TODO add boundary conditioins here
+
+    nodesWithoutDirichlet = list(filter(lambda x: x.GetBoundary != "Dirichlet" ,mesh))
+    #filter for ones without Dirichlet 
+    eqId = list(range(nodesWithoutDirichlet.__sizeof__()))
+    #select their index value
+    nodesWithoutDirichlet = list(map(lambda n: n.GetIndex(), nodesWithoutDirichlet))
+    NE = dict(zip(nodesWithoutDirichlet, eqId))
+    Data.setNE(NE)
+
+
+
+    print(f"Mesh generated with width={Data.getWidth()}, height={Data.getHeight()}, xResolution={Data.getXResolution()}, yResolution={Data.getYResolution()}, boundary={Data.getBoundary()}")
     # Function to generate a mesh for the simulation
     # This function will create a mesh based on the specified parameters and return it

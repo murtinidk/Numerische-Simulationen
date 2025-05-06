@@ -166,3 +166,12 @@ def drawNode(node):
         EQid = error.__str__()
     finally:
         meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= EQid, fill="black", font="Arial 8", anchor=NW, width=70)
+    
+    EN = None
+    try:
+        EN = {k: v for k, v in Data.getIEN().iteritems() if v == node.GetIndex()}
+        EN = "EN:" + str(EN)
+    except Exception as error:
+        EN = error.__str__()
+    finally:
+        meshCanvas.create_text(x - nodeRadius, y - nodeRadius, text= EN, fill="black", font="Arial 8", anchor=SE, width=70)

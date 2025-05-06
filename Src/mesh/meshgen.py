@@ -12,26 +12,16 @@ import numpy as np
 def meshgen():
     global Data
     
-    mesh = []
-    index = 0
     width = Data.getWidth()
     height = Data.getHeight()
     xResolution = Data.getXResolution()
     yResolution = Data.getYResolution()
-    """res_width = round(width*xResolution)
-    res_height = round(height*yResolution)
-    coords_height, coords_width = np.meshgrid(, )
-    coords = np.vstack([coords_height.ravel(), coords_width.ravel()]).T
-    for i in coords:
-        mesh.append(node.Node(index, i[1], i[0]))
-        index += 1"""
-    coords_height = np.linspace(0.0, height, yResolution)
-    coords_width = np.linspace(0.0, width, xResolution)
-    coords_width_grid, coords_height_grid = np.meshgrid(coords_width, coords_height)
+    node_coords_height = np.linspace(0.0, height, yResolution)
+    node_coords_width = np.linspace(0.0, width, xResolution)
+    node_coords_width_grid, node_coords_height_grid = np.meshgrid(node_coords_width, node_coords_height)
     indexes = np.linspace(0, yResolution * xResolution - 1, yResolution * xResolution, dtype= int)
-    combinations = np.stack((indexes, coords_width_grid.ravel(), coords_height_grid.ravel()), axis=-1).reshape(-1, 3)
+    combinations = np.stack((indexes, node_coords_width_grid.ravel(), node_coords_height_grid.ravel()), axis=-1).reshape(-1, 3)
     mesh = np.array(list(map(lambda x: node.Node(*x), combinations)))
-
 
     Data.setMesh(mesh)
 

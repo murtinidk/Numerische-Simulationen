@@ -69,19 +69,19 @@ class DataClass:
         return self.mesh
     
     #Knotengleichungsarray in:"Globale Knotennummer" out:"Gleichungs id"
-    def setNE(self, NE):
+    def setNE(self, NE) -> None:
         if(self.hasNE):
             raise Exception("NE already set!")
         self.NE = NE
         self.hasNE = True
         interface.gui.updateGui()
-    def hasNE(self):
+    def hasNE(self) -> bool:
         return self.hasNE
-    def getNE(self):
+    def getNE(self) -> dict:
         if(not self.hasNE):
             raise Exception("NE not set!")
         return self.NE
-    def getNEof(self, A):
+    def getNEof(self, A) -> int:
         if(not self.hasNE):
             raise Exception("NE not set, when accessing element!")
         if(not A in self.NE):
@@ -89,19 +89,19 @@ class DataClass:
         return self.NE[A]
     
     #Elementknotenarray in:"a=lokale Knotennummer, c=Elementnummer" out:"globale Knotennummer"
-    def setIEN(self, IEN):
+    def setIEN(self, IEN) -> None:
         if(self.hasIEN):
             raise Exception("IEN already set!")
         self.IEN = IEN
         self.hasIEN = True
         interface.gui.updateGui()
-    def hasIEN(self):
+    def hasIEN(self) -> bool:
         return self.hasIEN
-    def getIEN(self):
+    def getIEN(self) -> dict:
         if(not self.hasIEN):
             raise Exception("IEN not set!")
         return self.IEN
-    def getIENof(self, a, c):
+    def getIENof(self, a, c) -> int:
         if(not self.hasIEN):
             raise Exception("IEN not set, when accessing element!")
         if(not (a,c) in self.IEN):
@@ -109,13 +109,13 @@ class DataClass:
         return self.IEN[(a, c)]
     
     #Gleichungsarray in:"a=lokale Knotennummer, c=Elementnummer" out:"Gleichungs id"
-    def getEQof(self, a, c):
+    def getEQof(self, a, c) -> int:
         return self.getNEof(self.getIENof(a, c))
 
     #number of elements
-    def getNe(self):
+    def getNe(self) -> int:
         raise NotImplemented
         
     #number of nodes in element
-    def getNen(self):
+    def getNen(self) -> int:
         return 4

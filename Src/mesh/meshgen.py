@@ -36,7 +36,30 @@ def meshgen():
     Data.setMesh(mesh)
 
     #TODO add boundary conditioins here
-
+    
+    #IEN
+    IEN = dict()
+    mesh_size = len(mesh)
+    # Total number of possible cells (elements)
+    num_cells = (yResolution - 1) * (xResolution - 1)
+    cell_indices = np.arange(num_cells)
+    # Compute indices of each corner
+    i_TL = cell_indices
+    i_BL = cell_indices + 1
+    i_TR = cell_indices + xResolution
+    i_BR = cell_indices + xResolution + 1
+    # Filter indices that are in bounds
+    valid_TL = i_TL[i_TL < mesh_size]
+    valid_BL = i_BL[i_BL < mesh_size]
+    valid_TR = i_TR[i_TR < mesh_size]
+    valid_BR = i_BR[i_BR < mesh_size]
+    IEN.update({(0, i): mesh[i].GetIndex() for i in valid_TL})
+    IEN.update({(1, i - 1): mesh[i].GetIndex() for i in valid_BL})
+    IEN.update({(2, i - xResolution): mesh[i].GetIndex() for i in valid_TR})
+    IEN.update({(3, i - xResolution - 1): mesh[i].GetIndex() for i in valid_BR})
+    Data.setIEN(IEN)
+    
+    #NE
     nodesWithoutDirichlet = list(filter(lambda x: x.GetBoundary != "Dirichlet" ,mesh))
     #filter for ones without Dirichlet 
     eqId = list(range(nodesWithoutDirichlet.__sizeof__()))

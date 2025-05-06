@@ -16,3 +16,7 @@ Derzeitiger Stand (24.04.25):
 -Data class erstellt, bitte bei bedarf erweitern
 
 TODO:
+>Config saving/loading
+  -erlauben des abspeichern und laden der Programmparameter als config file
+  -config file input als CLI-argument zum laden, falls invalid -> default value
+  --> somit sollte es einfacher zum testen sein

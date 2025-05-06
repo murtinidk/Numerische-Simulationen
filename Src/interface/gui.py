@@ -3,8 +3,7 @@ from tkinter import *
 width = None
 height = None
 boundary_conditions_str = None
-meshHeight = 1000
-meshWidth = 1000
+meshWidth = meshHeight = 600
 
 
 def get_width():
@@ -111,6 +110,37 @@ def updateGui():
             mesh = Data.getMesh()
             for node in mesh:
                 drawNode(node)
+            for elementId in range((Data.getXResolution()-1) * (Data.getYResolution()-1)):
+                drawElement(elementId)
+        
+def drawElement(elementId):
+    from main import Data
+    global meshCanvas, meshWidth, meshHeight
+    
+    if(not Data.hasIEN):
+        return
+    #draw a element in the mesh
+    margin = 80
+    lineThickness = 1
+    
+    #get the nodes of the element
+    coordsTL = Data.mesh[Data.getIENof(0, elementId)].GetCoordinates()
+    coordsBL = Data.mesh[Data.getIENof(1, elementId)].GetCoordinates()
+    coordsTR = Data.mesh[Data.getIENof(2, elementId)].GetCoordinates()
+    coordsBR = Data.mesh[Data.getIENof(3, elementId)].GetCoordinates()
+    
+    largestSize = max(Data.getWidth(), Data.getHeight())
+    scale = (meshWidth - 2 * margin) / largestSize
+    coords = [
+        coordsTL[0] * scale + margin, coordsTL[1] * scale + margin,
+        coordsTR[0] * scale + margin, coordsTR[1] * scale + margin,
+        coordsBR[0] * scale + margin, coordsBR[1] * scale + margin,
+        coordsBL[0] * scale + margin, coordsBL[1] * scale + margin
+    ]
+    
+    #draw the element as a polygon
+    meshCanvas.create_polygon(coords, outline="black", fill="", width=lineThickness)
+    
         
 def drawNode(node):
     from main import Data

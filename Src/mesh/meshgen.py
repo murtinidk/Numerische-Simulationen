@@ -33,20 +33,24 @@ def meshgen():
     # Total number of possible cells (elements)
     num_cells = (yResolution - 1) * (xResolution - 1)
     cell_indices = np.arange(num_cells)
+
     # Compute indices of each corner
-    i_TL = cell_indices
-    i_BL = cell_indices + 1
-    i_TR = cell_indices + xResolution
-    i_BR = cell_indices + xResolution + 1
+    grid = np.arange(xResolution*yResolution).reshape(xResolution, yResolution)
+    # drop last row and last column, then flatten
+    i_TL =  grid[:-1, :-1].ravel()
+    cell_index_from_TL = dict(zip(i_TL, cell_indices))
+    i_TR = i_TL + 1
+    i_BL = i_TL + xResolution
+    i_BR = i_TL + xResolution + 1
     # Filter indices that are in bounds
     valid_TL = i_TL[i_TL < mesh_size]
-    valid_BL = i_BL[i_BL < mesh_size]
     valid_TR = i_TR[i_TR < mesh_size]
+    valid_BL = i_BL[i_BL < mesh_size]
     valid_BR = i_BR[i_BR < mesh_size]
-    IEN.update({(0, i): mesh[i].GetIndex() for i in valid_TL})
-    IEN.update({(1, i - 1): mesh[i].GetIndex() for i in valid_BL})
-    IEN.update({(2, i - xResolution): mesh[i].GetIndex() for i in valid_TR})
-    IEN.update({(3, i - xResolution - 1): mesh[i].GetIndex() for i in valid_BR})
+    IEN.update({(0, cell_index_from_TL[i]): mesh[i].GetIndex() for i in valid_TL})
+    IEN.update({(1, cell_index_from_TL[i-1]): mesh[i].GetIndex() for i in valid_TR})
+    IEN.update({(2, cell_index_from_TL[i - xResolution]): mesh[i].GetIndex() for i in valid_BL})
+    IEN.update({(3, cell_index_from_TL[i - xResolution - 1]): mesh[i].GetIndex() for i in valid_BR})
     Data.setIEN(IEN)
     
     #NE

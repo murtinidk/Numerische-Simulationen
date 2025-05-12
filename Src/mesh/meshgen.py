@@ -35,7 +35,7 @@ def meshgen():
     cell_indices = np.arange(num_cells)
 
     # Compute indices of each corner
-    grid = np.arange(xResolution*yResolution).reshape(xResolution, yResolution)
+    grid = np.arange(xResolution*yResolution).reshape(yResolution, xResolution)
     # drop last row and last column, then flatten
     i_TL =  grid[:-1, :-1].ravel()
     cell_index_from_TL = dict(zip(i_TL, cell_indices))

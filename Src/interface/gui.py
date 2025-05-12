@@ -1,6 +1,25 @@
 from tkinter import *
 import numpy as np
 from enum import Enum
+#config loading and file stuff
+from tkinter import messagebox, filedialog
+import configparser #config file loading
+import os #file loading
+
+###default values
+#default config path
+config_path = "settings.conf"
+
+#default settings
+DEFAULTS = {
+    'width': '10',
+    'height': '10',
+    'xResolution': '10',
+    'yResolution': '10',
+    'boundary': 'dirichlet',
+    'drawMesh': '1'
+}
+
 
 class debugOptions(Enum):
     drawID = 1
@@ -21,6 +40,38 @@ width = None
 height = None
 boundary_conditions_str = None
 meshWidth = meshHeight = 1000
+
+#load settings from file
+def load_settings(path=None):
+    cfg = configparser.ConfigParser()
+    #get default values
+    vals = DEFAULTS.copy()
+    file_to_load = path or config_path
+    if os.path.exists(file_to_load):
+        try:
+            cfg.read(file_to_load)
+            #overwrite default values with loaded values
+            for key in DEFAULTS:
+                vals[key] = cfg.get('Mesh', key, fallback=DEFAULTS[key])
+        except Exception as e:
+            messagebox.showerror("Load Error", f"Failed to load settings:\n{e}")
+    else:
+        messagebox.showinfo("Load Settings", f"No config found at {file_to_load}, using defaults.")
+    return vals
+
+
+
+def save_settings(vals, path=None):
+    #save settings to default or specified path
+    cfg = configparser.ConfigParser()
+    cfg['Mesh'] = vals
+    file_to_save = path or config_path
+    try:
+        with open(file_to_save, 'w') as f:
+            cfg.write(f)
+        messagebox.showinfo("Save Settings", f"Settings saved to {file_to_save}")
+    except Exception as e:
+        messagebox.showerror("Save Error", f"Failed to save settings:\n{e}")
 
 
 def get_width():
@@ -62,12 +113,44 @@ def get_yResolution():
 
 
 def create():
-    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh
-    
+    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path
+    #try load settings from file
+    #if not found, use default values
+    settings = load_settings()
+
+
     #main window
     root = Tk()
     root.title("Numerische Simulationen: FEM Simulation")
     root.geometry("1500x1200")
+
+    #CONFIG FILE PICKER 
+    Label(root, text="Config File:").grid(row=6, column=2, sticky=E)
+    config_label = Label(root, text=config_path, anchor=W)
+    config_label.grid(row=6, column=3, columnspan=3, sticky=W+E)
+    def choose_file():
+        nonlocal config_label
+        file = filedialog.askopenfilename(
+            title="Select config file",
+            filetypes=[("INI files", "*.conf *.ini"), ("All files", "*")]
+        )
+        if file:
+            config_path = file
+            config_label.config(text=config_path)
+            # reload with new file
+            vals = load_settings(config_path)
+            # update entries
+            width.delete(0, END); width.insert(0, vals['width'])
+            height.delete(0, END); height.insert(0, vals['height'])
+            xResolution.delete(0, END); xResolution.insert(0, vals['xResolution'])
+            yResolution.delete(0, END); yResolution.insert(0, vals['yResolution'])
+            boundary_conditions_str.set(vals['boundary'])
+            drawMesh.set(int(vals['drawMesh']))
+
+    Button(root, text="Choose Config File", command=choose_file).grid(row=6, column=2)
+
+
+
 
     #create input for mesh width and height
     Label(root, text="Width:").grid(row=0, column=0)
@@ -110,6 +193,34 @@ def create():
     start_button = Button(root, text="Start", command=lambda: __import__('main').main_simulation())
     start_button.grid(row=16, column=0, columnspan=2)
     
+    #load settings button
+    def on_load():
+        vals = load_settings(config_path)
+        width.delete(0, END); width.insert(0, vals['width'])
+        height.delete(0, END); height.insert(0, vals['height'])
+        xResolution.delete(0, END); xResolution.insert(0, vals['xResolution'])
+        yResolution.delete(0, END); yResolution.insert(0, vals['yResolution'])
+        boundary_conditions_str.set(vals['boundary'])
+        drawMesh.set(int(vals['drawMesh']))
+
+    #save settings button
+    def on_save_click():
+        vals = {
+            'width': width.get(),
+            'height': height.get(),
+            'xResolution': xResolution.get(),
+            'yResolution': yResolution.get(),
+            'boundary': boundary_conditions_str.get(),
+            'drawMesh': str(drawMesh.get())
+        }
+        save_settings(vals, config_path)
+
+    Button(root, text="Load Settings", command=on_load).grid(row=7, column=2)
+    Button(root, text="Save Settings", command=on_save_click).grid(row=8, column=2)
+
+
+
+
     
     meshCanvas = Canvas(root, width=meshWidth, height=meshHeight, bg="lightgrey")
     meshCanvas.grid(row=30, column=1, columnspan=2)

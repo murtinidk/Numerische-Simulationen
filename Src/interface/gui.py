@@ -155,33 +155,33 @@ def create():
     #create input for mesh width and height
     Label(root, text="Width:").grid(row=0, column=0)
     width = Entry(root)
-    width.insert(0, "10")
+    width.insert(0, settings['width'])
     width.grid(row=0, column=1)
 
     Label(root, text="Height:").grid(row=1, column=0)
     height = Entry(root)
-    height.insert(0, "10")
+    height.insert(0, settings['height'])
     height.grid(row=1, column=1)
 
     Label(root, text="Width Resolution:").grid(row=0, column=2)
     xResolution = Entry(root)
-    xResolution.insert(0, "10")
+    xResolution.insert(0, settings['xResolution'])
     xResolution.grid(row=0, column=3)
     
 
     Label(root, text="Height Resolution:").grid(row=1, column=2)
     yResolution = Entry(root)
-    yResolution.insert(0, "10")
+    yResolution.insert(0, settings['yResolution'])
     yResolution.grid(row=1, column=3)
 
     Label(root, text="Boundary Conditions:").grid(row=6, column=0)
     boundary_conditions_str = StringVar(root)
-    boundary_conditions_str.set("dirichlet")
+    boundary_conditions_str.set(settings['boundary'])
     boundary_conditions_dropdown = OptionMenu(root, boundary_conditions_str, "dirichlet", "neumann")
     boundary_conditions_dropdown.grid(row=6, column=1)
 
     
-    drawMesh = IntVar()
+    drawMesh = IntVar(value=int(settings['drawMesh']))
     Label(root, text="draw Mesh:").grid(row=2, column=2)
     drawMeshButton = Checkbutton(root, variable=drawMesh)
     drawMeshButton.select()

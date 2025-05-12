@@ -121,6 +121,8 @@ def create():
 
     #main window
     root = Tk()
+    img = PhotoImage(file='./resources/logo.png')
+    root.iconphoto(False, img)
     root.title("Numerische Simulationen: FEM Simulation")
     root.geometry("1500x1200")
 

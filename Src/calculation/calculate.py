@@ -7,7 +7,7 @@ def calculate():
   for elementId in range((Data.getXResolution() - 1) * (Data.getYResolution()-1)):
     curElement = element.Element(elementId)
     currElementmatrix = curElement.ElementMatrix()
-    if(False)
+    if(False):
       print("ElementMatrix: ", elementId)
       for line in currElementmatrix:
         print(*line, sep=" ")

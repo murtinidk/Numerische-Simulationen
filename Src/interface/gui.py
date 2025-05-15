@@ -6,7 +6,7 @@ from enum import Enum
 from tkinter import messagebox, filedialog
 import configparser #config file loading
 import os #file loading
-
+import pickle #for saving/loading data
 ###default values
 #default config path
 config_path = "settings.conf"
@@ -223,9 +223,51 @@ def create():
     Button(root, text="Load Settings", command=on_load).grid(row=7, column=2)
     Button(root, text="Save Settings", command=on_save_click).grid(row=8, column=2)
 
+    #program data loading/saving    
+    def save_data_button(file_path):
+        from main import Data
+        if Data.hasMesh:
+            try:
+                save_data(file_path)
+                messagebox.showinfo("Save Data", f"Data saved to {file_path}")
+            except Exception as e:
+                messagebox.showerror("Save Error", f"Failed to save data:\n{e}")
+        else:
+            messagebox.showwarning("Save Warning", "No mesh data to save.")
+            
+    def save_data(file_path):
+        with open(file_path, 'wb') as file:
+            from main import Data
+            pickle.dump(Data, file)
+        print(f"Data saved to {file_path}")
+    #save data button, asks for file name with picker for pickle
+    Button(root, text="Save Data", command=lambda: save_data_button(filedialog.asksaveasfilename(
+        title="Save data as",
+        defaultextension=".pkl",
+        filetypes=[("Pickle files", "*.pkl"), ("All files", "*")]
+    ))).grid(row=7, column=3)
 
-
-
+    #load data button, asks for file name with picker for pickle
+    def load_data_button(file_path):
+        try:
+            with open(file_path, 'rb') as file:
+                from main import Data
+                loaded_data = pickle.load(file)
+                #transfer loaded data to data class
+                for attr_name in dir(loaded_data):
+                    if not attr_name.startswith('__'):
+                        setattr(Data, attr_name, getattr(loaded_data, attr_name))
+            print(f"Data loaded from {file_path}")
+            #update the gui
+            updateGui()
+        except Exception as e:
+            messagebox.showerror("Load Error", f"Failed to load data:\n{e}")
+    
+    Button(root, text="Load Data", command=lambda: load_data_button(filedialog.askopenfilename(
+        title="Load data",
+        filetypes=[("Pickle files", "*.pkl"), ("All files", "*")]
+    ))).grid(row=8, column=3)
+    
     #canvas pannable / zoomable
     meshCanvas = PanableCanvas(root, width=meshWidth, height=meshHeight, bg="lightgrey")
     meshCanvas.grid(row=30, column=1, columnspan=2)
@@ -234,7 +276,20 @@ def create():
     root.mainloop()
     #todo: add quit function, maybe in main.py?
     #for freeing resources, maybe add a quit button to the gui
+
     
+#unused
+def closeGui():
+    #close the gui
+    from main import Data
+    if(Data.hasMesh):
+        Data.mesh = None
+        Data.hasMesh = False
+    meshCanvas.delete("all")
+    meshCanvas.destroy()
+    print("GUI closed")    
+
+
 def updateGui():
     from main import Data
     global width, height, boundary_conditions_str, meshCanvas

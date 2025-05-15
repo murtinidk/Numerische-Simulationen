@@ -16,3 +16,9 @@ class Node:
 
     def GetBoundary(self):
         return self.boundary
+    
+    def GetX(self):
+        return self.realX
+    
+    def GetY(self):
+        return self.realY

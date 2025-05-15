@@ -20,6 +20,7 @@ class DataClass:
         self.hasNE = False
         self.NE = None
         self.JacobianInverseTransposeMap = dict()
+        self.elementMatrixMap = dict()
         
     def reset(self):
         if self.hasSize:
@@ -125,3 +126,8 @@ class DataClass:
         self.JacobianInverseTransposeMap.update({(width, height): JacobianInverseTranspose})
     def getJacobianInverseTransposeMap(self) ->dict:
         return self.JacobianInverseTransposeMap
+    
+    def addElementMatrixToMap(self, id, elementMatrix) -> None:
+        self.elementMatrixMap.update({id: elementMatrix})
+    def getElementMatrixMap(self) -> dict:
+        return self.elementMatrixMap

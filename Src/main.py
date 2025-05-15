@@ -27,6 +27,8 @@ def main_simulation():
     print(f"Starting simulation with width={Data.getWidth()}, height={Data.getHeight()}, boundary={Data.getBoundary()}")
     from mesh.meshgen import meshgen 
     meshgen()
+    from calculation.calculate import calculate
+    calculate()
 
 
 

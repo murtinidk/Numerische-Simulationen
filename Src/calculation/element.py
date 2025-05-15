@@ -1,3 +1,5 @@
+import numpy as np
+
 class Element:
   def __init__(self, id: int):
     from main import Data
@@ -32,7 +34,7 @@ class Element:
     from main import Data
     return self.hX * self.hY / 4
   
-  def HutFx(self, a:int, xi: float) -> float:
+  def LocHutFx(self, a:int, xi: float) -> float:
     
     assert a in range(4), "a not in range(4)"
     assert (xi >= -1 and xi <= 1), "xi not in range (-1, 1)"
@@ -41,7 +43,7 @@ class Element:
     if a == 1 or a == 3:
       return (1 + xi) / 2
     
-  def HutFy(self, a:int, eta: float) -> float:
+  def LocHutFy(self, a:int, eta: float) -> float:
     
     assert a in range(4), "a not in range(4)"
     assert (eta >= -1 and eta <= 1), "eta not in range (-1, 1)"
@@ -50,10 +52,10 @@ class Element:
     if a == 2 or a == 3:
       return (1 + eta) / 2
     
-  def HutF2D(self ,a:int ,xi:float, eta:float):
+  def LocHutF2D(self ,a:int ,xi:float, eta:float):
     return self.HutFx(a, xi) * self.HutFy(a, eta)
   
-  def HutFderivativeX(self, a:int, xi:float):
+  def LocHutFderivativeX(self, a:int, xi:float):
     assert a in range(4), "a not in range(4)"
     assert (xi >= -1 and xi <= 1), "xi not in range (-1, 1)"
     if a == 0 or a == 2:
@@ -61,7 +63,7 @@ class Element:
     if a == 1 or a == 3:
       return 1 / 2
     
-  def HutFderivativeY(self, a:int, eta:float):
+  def LocHutFderivativeY(self, a:int, eta:float):
     assert a in range(4), "a not in range(4)"
     assert (eta >= -1 and eta <= 1), "eta not in range (-1, 1)"
     if a == 0 or a == 1:
@@ -69,5 +71,11 @@ class Element:
     if a == 2 or a == 3:
       return 1 / 2
     
-  def HutFderivative2D(self, a:int, xi:float, eta:float):
-    return (self.HutFderivativeX(a, xi), self.HutFderivativeY(a, eta))
+  def LocHutFderivative2D(self, a:int, b:int, xi:float, eta:float):
+    return [self.HutFderivativeX(a, xi), self.HutFderivativeY(a, eta)]
+  
+  def LhsIntegrationpoint(self, a:int, b:int, xi:float, eta:float):
+    from main import Data
+    return np.dot((self.GetJacobianInverseTronspose() @ self.LocHutFderivative2D(a=a, xi=xi, eta=eta)), \
+           (self.GetJacobianInverseTronspose() @ self.LocHutFderivative2D(a=b, xi=xi, eta=eta))) * \
+           self.GetJacobianDeterminant()

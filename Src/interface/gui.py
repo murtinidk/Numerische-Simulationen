@@ -1,4 +1,5 @@
 from tkinter import *
+from interface.CustomCanvas import PanableCanvas
 import numpy as np
 from enum import Enum
 #config loading and file stuff
@@ -125,7 +126,9 @@ def create():
     root.iconphoto(False, img)
     root.title("Numerische Simulationen: FEM Simulation")
     root.geometry("1500x1200")
+    root.tk_setPalette( "#FFFFFF" ) #fix linux color issues
 
+    
     #CONFIG FILE PICKER 
     Label(root, text="Config File:").grid(row=6, column=2, sticky=E)
     config_label = Label(root, text=config_path, anchor=W)
@@ -223,8 +226,8 @@ def create():
 
 
 
-    
-    meshCanvas = Canvas(root, width=meshWidth, height=meshHeight, bg="lightgrey")
+    #canvas pannable / zoomable
+    meshCanvas = PanableCanvas(root, width=meshWidth, height=meshHeight, bg="lightgrey")
     meshCanvas.grid(row=30, column=1, columnspan=2)
 
     #tkinter loop

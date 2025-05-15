@@ -19,6 +19,7 @@ class DataClass:
         self.IEN = None
         self.hasNE = False
         self.NE = None
+        self.JacobianInverseTransposeMap = dict()
         
     def reset(self):
         if self.hasSize:
@@ -119,3 +120,8 @@ class DataClass:
     #number of nodes in element
     def getNen(self) -> int:
         return 4
+    
+    def addJacobianInverseTransposeToMap(self, width, height, JacobianInverseTranspose) -> None:
+        self.JacobianInverseTransposeMap.update({(width, height): JacobianInverseTranspose})
+    def getJacobianInverseTransposeMap(self) ->dict:
+        return self.JacobianInverseTransposeMap

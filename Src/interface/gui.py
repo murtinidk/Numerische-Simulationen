@@ -122,7 +122,7 @@ def get_line():
     height_float = float(height.get())
     if (x1 or x2 or y1 or y2) <= 0 or (x1 or x2) >= width_float or (y1 or y2) >= height_float:
         raise ValueError
-    return np.array(x1,y1,x2,y2)
+    return np.array([x1,y1,x2,y2])
     
 
 
@@ -317,6 +317,7 @@ def updateGui():
         if(drawMesh.get()):
             mesh = Data.getMesh()
             drawArrow()
+            drawLine(Data.getLine())
             
             if((debugSettings[debugOptions.drawNodes]) or (not debugSettings[debugOptions.drawID]) or (debugSettings[debugOptions.drawEQ])):
                 for node in mesh:
@@ -431,3 +432,27 @@ def drawNode(node):
             EN = error.__str__()
         finally:
             meshCanvas.create_text(x - nodeRadius, y - nodeRadius, text= EN, fill="black", font="Arial 8", anchor=SE, width=90)
+
+def drawLine(line):
+    from main import Data
+    global meshCanvas, meshWidth, meshHeight
+    if not Data.hasLine:
+        return
+    #draw the line in the mesh
+    lineThickness = 2
+    margin = 80
+
+    x1, y1, x2, y2 = line
+    largestSize = max(Data.getWidth(), Data.getHeight())
+    scale = (meshWidth - 2 * margin) / largestSize
+    xOffset = (largestSize - Data.getWidth()) / 2
+    yOffset = (largestSize - Data.getHeight()) / 2
+    x1_canvas = (x1 + xOffset) * scale + margin
+    y1_canvas = (y1 + yOffset) * scale + margin
+    x2_canvas = (x2 + xOffset) * scale + margin
+    y2_canvas = (y2 + yOffset) * scale + margin
+
+    coords1 = (x1_canvas, y1_canvas)
+    coords2 = (x2_canvas, y2_canvas)
+    meshCanvas.create_line(coords1, coords2, width=lineThickness+0.5, fill='#AAA', smooth=True)
+    meshCanvas.create_line(coords1, coords2, width=lineThickness, fill='#000', smooth=True)

@@ -62,14 +62,14 @@ class DataClass:
     def setLine(self, line):
         if(self.hasLine):
             raise Exception("Line already set!")
-        if line != None:
+        if line is not None:
             self.line = line
             self.hasLine = True
     def hasLine(self):
         return self.hasLine
     def getLine(self):
         if(not self.hasLine):
-            raise Exception("Line not set!")
+            return None
         return self.line
 
     def setMesh(self, mesh):

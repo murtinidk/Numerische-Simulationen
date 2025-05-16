@@ -27,10 +27,11 @@ def meshgen():
     Data.setMesh(mesh)
 
     #finding nearest neighbours to line
-    tree = BallTree(combinations[:, 1:3], leaf_size=10, metric='euclidean')
-    index = tree.query_radius(np.array([[4.7,4.7]]), 1, return_distance=False)
+    line = Data.getLine()
+    if line is not None:
+        tree = BallTree(combinations[:, 1:3], leaf_size=1, metric='euclidean')
+        index = tree.query_radius(np.array([[4.7,4.7]]), 1, return_distance=False)
 
-    
     #TODO add boundary conditioins here
     
     #IEN

@@ -24,7 +24,7 @@ def main_simulation():
     global Data
     Data.reset()
     Data.setSize(gui.get_width(), gui.get_height(), gui.get_boundary_condition(), gui.get_xResolution(), gui.get_yResolution())
-    #Data.setLine(gui.get_line())
+    Data.setLine(gui.get_line())
     print(f"Starting simulation with width={Data.getWidth()}, height={Data.getHeight()}, boundary={Data.getBoundary()}")
     from mesh.meshgen import meshgen 
     meshgen()

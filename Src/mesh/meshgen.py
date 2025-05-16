@@ -7,12 +7,14 @@ import data.node as node
 from main import Data
 import numpy as np
 from sklearn.neighbors import BallTree
+import interface.gui as gui
 
 # declarations
 
 def meshgen():
     global Data
     
+    gui.setStep(gui.simStep.meshGen)
     width = Data.getWidth()
     height = Data.getHeight()
     xResolution = Data.getXResolution()
@@ -27,6 +29,7 @@ def meshgen():
     Data.setMesh(mesh)
 
     #finding nearest neighbours to line
+    gui.setStep(gui.simStep.boundaryConditions)
     line = Data.getLine()
     if line is not None:
         tree = BallTree(combinations[:, 1:3], leaf_size=1, metric='euclidean')
@@ -34,6 +37,8 @@ def meshgen():
 
     #TODO add boundary conditioins here
     
+    
+    gui.setStep(gui.simStep.meshTables)
     #IEN
     IEN = dict()
     mesh_size = len(mesh)
@@ -69,6 +74,6 @@ def meshgen():
     NE = dict(zip(nodesWithoutDirichlet, eqId))
     Data.setNE(NE)
 
-    print(f"Mesh generated with width={Data.getWidth()}, height={Data.getHeight()}, xResolution={Data.getXResolution()}, yResolution={Data.getYResolution()}, boundary={Data.getBoundary()}")
+    #print(f"Mesh generated with width={Data.getWidth()}, height={Data.getHeight()}, xResolution={Data.getXResolution()}, yResolution={Data.getYResolution()}, boundary={Data.getBoundary()}")
     # Function to generate a mesh for the simulation
     # This function will create a mesh based on the specified parameters and return it

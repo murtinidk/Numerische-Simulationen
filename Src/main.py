@@ -21,17 +21,18 @@ Data: data.DataClass = data.DataClass()
 # declarations
 # main function, called on button press in gui
 def main_simulation(): 
+    gui.setStep(gui.simStep.started)
     global Data
     Data.reset()
     Data.setSize(gui.get_width(), gui.get_height(), gui.get_boundary_condition(), gui.get_xResolution(), gui.get_yResolution())
     Data.setLine(gui.get_line())
-    print(f"Starting simulation with width={Data.getWidth()}, height={Data.getHeight()}, boundary={Data.getBoundary()}")
     from mesh.meshgen import meshgen 
     meshgen()
     from calculation.calculate import calculate
     calculate()
 
-
+    
+    gui.setStep(gui.simStep.finished)
 
 #main function 
 if __name__ == "__main__":

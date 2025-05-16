@@ -42,6 +42,26 @@ height = None
 boundary_conditions_str = None
 meshWidth = meshHeight = 1000
 
+class simStep(Enum):
+    none = 0
+    started = 1
+    meshGen = 2
+    boundaryConditions = 3
+    meshTables = 4
+    systemMatrix = 5
+    finished = 6
+    simStepNum = 7
+
+SimSteps = {
+    simStep.none: "None",
+    simStep.started: "Started",
+    simStep.meshGen: "Mesh Generation",
+    simStep.boundaryConditions: "Boundary Conditions",
+    simStep.meshTables: "Mesh Tables",
+    simStep.systemMatrix: "System Matrix",
+    simStep.finished: "Finished"
+}
+
 #load settings from file
 def load_settings(path=None):
     cfg = configparser.ConfigParser()
@@ -128,7 +148,7 @@ def get_line():
 
 
 def create():
-    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path, lineInputXY
+    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path, lineInputXY, step_text
     #try load settings from file
     #if not found, use default values
     settings = load_settings()
@@ -214,7 +234,11 @@ def create():
     #from main import main_simulation 
     #start_button = Button(root, text="Start", command=main_simulation)
     start_button = Button(root, text="Start", command=lambda: __import__('main').main_simulation())
-    start_button.grid(row=16, column=0, columnspan=2)
+    start_button.grid(row=16, column=0, columnspan=1)
+    
+    step_text = Label(root, text="Sim Step: None")
+    step_text.grid(row=16, column=1, columnspan=1)
+    setStep(simStep.none)
     
     #load settings button
     def on_load():
@@ -456,3 +480,10 @@ def drawLine(line):
     coords2 = (x2_canvas, y2_canvas)
     meshCanvas.create_line(coords1, coords2, width=lineThickness+0.5, fill='#AAA', smooth=True)
     meshCanvas.create_line(coords1, coords2, width=lineThickness, fill='#000', smooth=True)
+
+def setStep(step: simStep):
+    global step_text, SimSteps
+    text = " Sim Step [" + str(step.value) + "/" + str(simStep.simStepNum.value - 1) + "]: " + SimSteps[step]
+    step_text.config(text= text)
+    print(text)
+    step_text.update()

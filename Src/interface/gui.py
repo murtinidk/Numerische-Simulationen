@@ -109,12 +109,26 @@ def get_yResolution():
     except ValueError:
         #return default if invalid
         return 10
-
+    
+def get_line():
+    split = (lineInputXY.get().replace(',', ' ').replace(',',' ')).split()
+    if len(split) != 4:
+        return None
+    try:
+        x1,y1,x2,y2 = map(float, split)
+    except ValueError:
+        return None
+    width_float = float(width.get())
+    height_float = float(height.get())
+    if (x1 or x2 or y1 or y2) <= 0 or (x1 or x2) >= width_float or (y1 or y2) >= height_float:
+        raise ValueError
+    return np.array(x1,y1,x2,y2)
+    
 
 
 
 def create():
-    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path
+    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path, lineInputXY
     #try load settings from file
     #if not found, use default values
     settings = load_settings()
@@ -184,6 +198,10 @@ def create():
     boundary_conditions_str.set(settings['boundary'])
     boundary_conditions_dropdown = OptionMenu(root, boundary_conditions_str, "dirichlet", "neumann")
     boundary_conditions_dropdown.grid(row=6, column=1)
+
+    Label(root, text="Line input (X1, Y1 X2,Y2):").grid(row=2, column=0,)
+    lineInputXY = Entry(root)
+    lineInputXY.grid(row=2, column=1)
 
     
     drawMesh = IntVar(value=int(settings['drawMesh']))

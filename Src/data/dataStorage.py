@@ -116,7 +116,7 @@ class DataClass:
 
     #number of elements
     def getNe(self) -> int:
-        raise NotImplemented
+        return (self.xResolution -1) * (self.yResolution - 1)
         
     #number of nodes in element
     def getNen(self) -> int:

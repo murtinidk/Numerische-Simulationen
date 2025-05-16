@@ -6,6 +6,7 @@
 import data.node as node
 from main import Data
 import numpy as np
+from sklearn.neighbors import BallTree
 
 # declarations
 
@@ -24,6 +25,12 @@ def meshgen():
     mesh = np.array(list(map(lambda x: node.Node(*x), combinations)))
 
     Data.setMesh(mesh)
+
+    #finding nearest neighbours to line
+    line = Data.getLine()
+    if line is not None:
+        tree = BallTree(combinations[:, 1:3], leaf_size=1, metric='euclidean')
+        index = tree.query_radius(np.array([[4.7,4.7]]), 1, return_distance=False)
 
     #TODO add boundary conditioins here
     

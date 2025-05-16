@@ -15,6 +15,8 @@ class DataClass:
         self.boundary = None
         self.hasMesh = False
         self.mesh = None
+        self.line = None
+        self.hasLine = False
         self.hasIEN = False
         self.IEN = None
         self.hasNE = False
@@ -56,6 +58,19 @@ class DataClass:
         if(not self.hasSize):
             raise Exception("Size not set!")
         return self.boundary
+    
+    def setLine(self, line):
+        if(self.hasLine):
+            raise Exception("Line already set!")
+        if line is not None:
+            self.line = line
+            self.hasLine = True
+    def hasLine(self):
+        return self.hasLine
+    def getLine(self):
+        if(not self.hasLine):
+            return None
+        return self.line
 
     def setMesh(self, mesh):
         if(self.hasMesh):

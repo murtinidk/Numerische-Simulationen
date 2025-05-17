@@ -13,20 +13,27 @@ def calculate():
   gui.setStep(gui.simStep.systemMatrix)
   IENdict = Data.getIEN()
   valuesDict = dict()
+  systemVector = [0.] * len(Data.getNE())
   for e in range(Data.getNe()):
     if(calculateIndividualElementMatrixes):
       elementmatrix = element.Element(e).ElementMatrix()
+
+    elementVector = element.Element(e).ElementVector(elementmatrix)
+
     if(False): #for debug, spams terminal
       print("ElementMatrix: ", e)
-      for line in currElementmatrix:
+      for line in elementmatrix:
         print(*line, sep=" ")
 
     for a in range(Data.getNen()):
-      eq1 = IENdict[(a, e)]
-      if(eq1 > 0):
+      if(Data.isEQkey(a, e)):
+        eq1 = Data.getEQof(a, e)
+        #add to systemVector
+        systemVector[eq1] += elementVector[a]
+
         for b in range(Data.getNen()):
-          eq2 = IENdict[(b, e)]
-          if(eq2 > 0):
+          if(Data.isEQkey(b, e)):
+            eq2 = Data.getEQof(b, e)
             if(elementmatrix[a][b] != 0):
               if(valuesDict.get((eq1, eq2)) == None):
                 valuesDict[(eq1, eq2)] = 0
@@ -38,6 +45,13 @@ def calculate():
   systemMatrix.eliminate_zeros()
   if(False): #for debug, consttructs a dense matrix
     print("SystemMatrix: \n", systemMatrix.todense())
+    print("SystemVector: ", systemVector)
+
+  gui.setStep(gui.simStep.solveSystem)
+
+  result = sparse.linalg.spsolve(systemMatrix, systemVector)
+  print("Result: ", result)
+  
   
 
   

@@ -66,7 +66,7 @@ def meshgen():
     Data.setIEN(IEN)
     
     #NE
-    nodesWithoutDirichlet = list(filter(lambda x: x.GetBoundary != "Dirichlet" ,mesh))
+    nodesWithoutDirichlet = list(filter(lambda x: x.GetDirichletBoundary() == None ,mesh))
     #filter for ones without Dirichlet 
     eqId = list(range(nodesWithoutDirichlet.__sizeof__()))
     #select their index value

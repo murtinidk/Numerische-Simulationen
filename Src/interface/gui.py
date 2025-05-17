@@ -31,7 +31,7 @@ class debugOptions(Enum):
 
 debugSettings = {
     debugOptions.drawID : False,
-    debugOptions.drawEQ : False,
+    debugOptions.drawEQ : True,
     debugOptions.drawEN : False,
     debugOptions.drawLines : True,
     debugOptions.drawNodes : False
@@ -49,8 +49,9 @@ class simStep(Enum):
     boundaryConditions = 3
     meshTables = 4
     systemMatrix = 5
-    finished = 6
-    simStepNum = 7
+    solveSystem = 6
+    finished = 7
+    simStepNum = 8
 
 SimSteps = {
     simStep.none: "None",
@@ -59,6 +60,7 @@ SimSteps = {
     simStep.boundaryConditions: "Boundary Conditions",
     simStep.meshTables: "Mesh Tables",
     simStep.systemMatrix: "System Matrix",
+    simStep.solveSystem: "Solve System",
     simStep.finished: "Finished"
 }
 

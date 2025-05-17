@@ -128,6 +128,15 @@ class DataClass:
     #Gleichungsarray in:"a=lokale Knotennummer, c=Elementnummer" out:"Gleichungs id"
     def getEQof(self, a, c) -> int:
         return self.getNEof(self.getIENof(a, c))
+    
+    def isEQkey(self, a, c) -> bool:
+        if(not self.hasIEN):
+            raise Exception("IEN not set, when accessing element!")
+        if(not (a,c) in self.IEN):
+            return False
+        if(not self.IEN[(a, c)] in self.NE):
+            return False
+        return True
 
     #number of elements
     def getNe(self) -> int:

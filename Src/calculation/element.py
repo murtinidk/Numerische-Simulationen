@@ -17,6 +17,19 @@ class Element:
     hY2 = Data.mesh[self.nodeTRId].GetY() - Data.mesh[self.nodeBRId].GetY()
     assert self.hY == hY2, "Element not rectangular"
     assert self.hY != 0, "hY is 0!"
+
+  def GetNodeTL(self):
+    from main import Data
+    return Data.mesh[self.nodeTLId]
+  def GetNodeTR(self):
+    from main import Data
+    return Data.mesh[self.nodeTRId]
+  def GetNodeBL(self):
+    from main import Data
+    return Data.mesh[self.nodeBLId]
+  def GetNodeBR(self):
+    from main import Data
+    return Data.mesh[self.nodeBRId]
     
   def GetJacobianInverseTronspose(self):
     from main import Data
@@ -73,21 +86,78 @@ class Element:
       return 1 / 2
     
   def LocHutFderivative2D(self, a:int, xi:float, eta:float):
-    return [self.LocHutFderivativeX(a, xi), self.LocHutFderivativeY(a, eta)]
+    return [self.LocHutFderivativeX(a, xi) * self.LocHutFy(a=a, eta=eta), self.LocHutFderivativeY(a, eta) * self.LocHutFx(a=a, xi=xi)]
   
-  def LhsIntegrationpoint(self, a:int, b:int, xi:float, eta:float):
+  def LhsIntegrationPoint(self, a:int, b:int, xi:float, eta:float):
     from main import Data
-    return np.dot((np.dot(self.GetJacobianInverseTronspose(), self.LocHutFderivative2D(a=a, xi=xi, eta=eta))), \
-           (np.dot(self.GetJacobianInverseTronspose(),  self.LocHutFderivative2D(a=b, xi=xi, eta=eta)))) * \
-           self.GetJacobianDeterminant()
+    NiTerm = (np.dot(self.GetJacobianInverseTronspose(), self.LocHutFderivative2D(a=a, xi=xi, eta=eta)))
+    NjTerm = (np.dot(self.GetJacobianInverseTronspose(), self.LocHutFderivative2D(a=b, xi=xi, eta=eta)))
+    return np.dot(NiTerm, NjTerm) * self.GetJacobianDeterminant()
   
   def ElementMatrix(self):
     ElementMatrix = []
     for a in range(4):
       K_a = []
       for b in range(4):
-        K_ab = gauss.Integrate2d(lambda xi, eta: self.LhsIntegrationpoint(a, b, xi, eta), n=2)
+        K_ab = gauss.Integrate2d(lambda xi, eta: self.LhsIntegrationPoint(a, b, xi, eta), n=2)
         K_a.append(K_ab)
       ElementMatrix.append(K_a)
     return ElementMatrix
+  
+  #edge is the index of the node in the counterclockwise direction of the edge
+  def RhsIntegrationPoint(self, a:int, edge:int, location:float):
+    #we will always have to integrate along the two neighbouring edges of the node
+
+    #check if we are on an opposed edge
+    if((a == 0 and (edge == 1 or edge == 3)) or
+       (a == 1 and (edge == 2 or edge == 3)) or
+       (a == 2 and (edge == 0 or edge == 1)) or
+       (a == 3 and (edge == 0 or edge == 2))):
+      return 0
+    
+    vonNeumannBoundary = None
+    if(edge == 0):
+      vonNeumannBoundary = self.GetNodeTL().GetRightVonNeumannBoundary()
+    elif(edge == 1):
+      vonNeumannBoundary = self.GetNodeTR().GetBelowVonNeumannBoundary()
+    elif(edge == 2):
+      vonNeumannBoundary = self.GetNodeTL().GetBelowVonNeumannBoundary()
+    elif(edge == 3):
+      vonNeumannBoundary = self.GetNodeBL().GetRightVonNeumannBoundary()
+    else:
+      raise ValueError("Edge not in range(4)")
+    
+    if(vonNeumannBoundary == None):
+      return 0
+    
+    if(edge == 0 or edge == 3):
+      return self.LocHutFx(a=a, xi=location) * \
+             vonNeumannBoundary * \
+             self.GetJacobianDeterminant()
+    elif(edge == 1 or edge == 2):
+      return self.LocHutFy(a=a, eta=location) * \
+             vonNeumannBoundary * \
+             self.GetJacobianDeterminant()
+    
+  def ElementVector(self, ElementMatrix):
+    ElementVector = []
+    for a in range(4):
+      f_a = 0.
+
+      #vonNeumann boundary conditions
+      for edge in range(4):
+        f_a =+ gauss.Integrate1d(lambda location: self.RhsIntegrationPoint(a=a, edge=edge, location=location), n=2)
+
+      #dirichlet boundary conditions
+      if(self.GetNodeTL().GetDirichletBoundary() != None):
+        f_a -= self.GetNodeTL().GetDirichletBoundary() * ElementMatrix[a][0]
+      if(self.GetNodeTR().GetDirichletBoundary() != None):
+        f_a -= self.GetNodeTR().GetDirichletBoundary() * ElementMatrix[a][1]
+      if(self.GetNodeBL().GetDirichletBoundary() != None):
+        f_a -= self.GetNodeBL().GetDirichletBoundary() * ElementMatrix[a][2]
+      if(self.GetNodeBR().GetDirichletBoundary() != None):
+        f_a -= self.GetNodeBR().GetDirichletBoundary() * ElementMatrix[a][3]
+        
+      ElementVector.append(f_a)
+    return ElementVector
   

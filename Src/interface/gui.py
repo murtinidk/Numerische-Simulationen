@@ -12,7 +12,7 @@ import pickle #for saving/loading data
 #default config path
 config_path = "settings.conf"
 
-ColorResolution = 32
+ColorResolution = 64
 
 #default settings
 DEFAULTS = {
@@ -35,10 +35,10 @@ class debugOptions(Enum):
 
 debugSettings = {
     debugOptions.drawID : False,
-    debugOptions.drawEQ : True,
+    debugOptions.drawEQ : False,
     debugOptions.drawEN : False,
     debugOptions.drawLines : True,
-    debugOptions.drawNodes : False,
+    debugOptions.drawNodes : True,
     debugOptions.drawValues : True
 }
 
@@ -511,6 +511,8 @@ def setStep(step: simStep):
 def drawColor():
     from main import Data
     global meshCanvas, meshWidth, meshHeight, ColorResolution
+    colorRes = ColorResolution / max(Data.getXResolution(), Data.getYResolution())
+    colorRes = max(1, int(colorRes))
 
     if not Data.getHasResult():
         return
@@ -530,13 +532,13 @@ def drawColor():
         xmin, ymin = TL.GetCoordinates()
         xmax, ymax = BR.GetCoordinates()
         #the border of the individual dolour sections
-        xborder = np.linspace(xmin, xmax, ColorResolution+1)
-        yborder = np.linspace(ymin, ymax, ColorResolution+1)
+        xborder = np.linspace(xmin, xmax, colorRes+1)
+        yborder = np.linspace(ymin, ymax, colorRes+1)
         #the probe points in the middle of the sections
-        xprobe = np.linspace(xmin, xmax, 2*ColorResolution+1)[::2]
-        yprobe = np.linspace(ymin, ymax, 2*ColorResolution+1)[::2]
-        for i in range(ColorResolution):
-            for j in range(ColorResolution):
+        xprobe = np.linspace(xmin, xmax, 2*colorRes+1)[::2]
+        yprobe = np.linspace(ymin, ymax, 2*colorRes+1)[::2]
+        for i in range(colorRes):
+            for j in range(colorRes):
                 x1, y1 = globalToMeshCoords(xborder[i], yborder[j])
                 x2, y2 = globalToMeshCoords(xborder[i+1], yborder[j+1])
                 value = valueInElement(xprobe[i], yprobe[j], e)

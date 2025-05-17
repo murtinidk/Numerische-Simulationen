@@ -12,7 +12,7 @@ import pickle #for saving/loading data
 #default config path
 config_path = "settings.conf"
 
-ColorResolution = 8
+ColorResolution = 32
 
 #default settings
 DEFAULTS = {
@@ -540,6 +540,8 @@ def drawColor():
                 x1, y1 = globalToMeshCoords(xborder[i], yborder[j])
                 x2, y2 = globalToMeshCoords(xborder[i+1], yborder[j+1])
                 value = valueInElement(xprobe[i], yprobe[j], e)
+                if valueRange == 0:
+                    valueRange = 1
                 hottness = (value - minValue) / valueRange #should be from 0 to 1
                 r = int(hottness * 192) + 63
                 g = 63

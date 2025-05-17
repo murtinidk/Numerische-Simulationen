@@ -107,13 +107,6 @@ class Element:
   #edge is the index of the node in the counterclockwise direction of the edge
   def RhsIntegrationPoint(self, a:int, edge:int, location:float):
     #we will always have to integrate along the two neighbouring edges of the node
-
-    #check if we are on an opposed edge
-    if((a == 0 and (edge == 1 or edge == 3)) or
-       (a == 1 and (edge == 2 or edge == 3)) or
-       (a == 2 and (edge == 0 or edge == 1)) or
-       (a == 3 and (edge == 0 or edge == 2))):
-      return 0
     
     vonNeumannBoundary = None
     if(edge == 0):
@@ -129,6 +122,10 @@ class Element:
     
     if(vonNeumannBoundary == None):
       return 0
+    
+    if(edge == 0 or edge == 1):
+      vonNeumannBoundary = -vonNeumannBoundary
+
     
     if(edge == 0 or edge == 3):
       return self.LocHutFx(a=a, xi=location) * \
@@ -146,7 +143,7 @@ class Element:
 
       #vonNeumann boundary conditions
       for edge in range(4):
-        f_a =+ gauss.Integrate1d(lambda location: self.RhsIntegrationPoint(a=a, edge=edge, location=location), n=2)
+        f_a += gauss.Integrate1d(lambda location: self.RhsIntegrationPoint(a=a, edge=edge, location=location), n=2)
 
       #dirichlet boundary conditions
       if(self.GetNodeTL().GetDirichletBoundary() != None):

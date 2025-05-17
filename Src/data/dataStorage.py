@@ -12,7 +12,6 @@ class DataClass:
         self.height = None
         self.xResolution = None
         self.yResolution = None
-        self.boundary = None
         self.hasMesh = False
         self.mesh = None
         self.line = None
@@ -23,17 +22,19 @@ class DataClass:
         self.NE = None
         self.JacobianInverseTransposeMap = dict()
         self.elementMatrixMap = dict()
+        self.hasResult = False
+
+
         
     def reset(self):
         if self.hasSize:
             self.__init__()
     
-    def setSize(self, width, height, boundary, xResolution, yResolution):
+    def setSize(self, width, height, xResolution, yResolution):
         self.width = width
         self.height = height
         self.xResolution = xResolution
         self.yResolution = yResolution
-        self.boundary = boundary
         self.hasSize = True
     
     def hasSize(self):
@@ -54,10 +55,6 @@ class DataClass:
         if(not self.hasSize):
             raise Exception("Size not set!")
         return self.yResolution
-    def getBoundary(self):
-        if(not self.hasSize):
-            raise Exception("Size not set!")
-        return self.boundary
     
     def setLine(self, line):
         if(self.hasLine):
@@ -155,3 +152,9 @@ class DataClass:
         self.elementMatrixMap.update({id: elementMatrix})
     def getElementMatrixMap(self) -> dict:
         return self.elementMatrixMap
+    
+    def setHasResult(self, hasResult) -> None:
+        self.hasResult = hasResult
+
+    def getHasResult(self) -> bool:
+        return self.hasResult

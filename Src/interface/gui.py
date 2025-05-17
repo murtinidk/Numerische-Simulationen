@@ -2,6 +2,7 @@ from tkinter import *
 from interface.CustomCanvas import PanableCanvas
 import numpy as np
 from enum import Enum
+import calculation.element as element
 #config loading and file stuff
 from tkinter import messagebox, filedialog
 import configparser #config file loading
@@ -10,6 +11,8 @@ import pickle #for saving/loading data
 ###default values
 #default config path
 config_path = "settings.conf"
+
+ColorResolution = 8
 
 #default settings
 DEFAULTS = {
@@ -28,13 +31,15 @@ class debugOptions(Enum):
     drawEN = 3
     drawLines = 4
     drawNodes = 5
+    drawValues = 6
 
 debugSettings = {
     debugOptions.drawID : False,
     debugOptions.drawEQ : True,
     debugOptions.drawEN : False,
     debugOptions.drawLines : True,
-    debugOptions.drawNodes : False
+    debugOptions.drawNodes : False,
+    debugOptions.drawValues : True
 }
 
 width = None
@@ -50,8 +55,9 @@ class simStep(Enum):
     meshTables = 4
     systemMatrix = 5
     solveSystem = 6
-    finished = 7
-    simStepNum = 8
+    drawingColors = 7
+    finished = 8
+    simStepNum = 9
 
 SimSteps = {
     simStep.none: "None",
@@ -61,6 +67,7 @@ SimSteps = {
     simStep.meshTables: "Mesh Tables",
     simStep.systemMatrix: "System Matrix",
     simStep.solveSystem: "Solve System",
+    simStep.drawingColors: "Drawing Colors",
     simStep.finished: "Finished"
 }
 
@@ -341,6 +348,8 @@ def updateGui():
         #update the mesh in the gui
         meshCanvas.delete("all")
         if(drawMesh.get()):
+            if(debugSettings[debugOptions.drawValues] and Data.getHasResult()):
+                drawColor()
             mesh = Data.getMesh()
             drawArrow()
             drawLine(Data.getLine())
@@ -445,7 +454,7 @@ def drawNode(node):
         except Exception as error:
             EQid = error.__str__()
         finally:
-            meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= EQid, fill="black", font="Arial 8", anchor=NW, width=70)
+            meshCanvas.create_text(x - nodeRadius, y + nodeRadius, text= EQid, fill="black", font="Arial 8", anchor=NE, width=70)
     
     if(debugSettings[debugOptions.drawEN]):
         EN = None
@@ -458,6 +467,15 @@ def drawNode(node):
             EN = error.__str__()
         finally:
             meshCanvas.create_text(x - nodeRadius, y - nodeRadius, text= EN, fill="black", font="Arial 8", anchor=SE, width=90)
+
+    if(debugSettings[debugOptions.drawValues]):
+        if(not node.GetResult() is None):
+            text = "Result:" + f"{node.GetResult():.3f}"
+        elif(not node.GetDirichletBoundary() is None):
+            text = "Dirichlet:" + f"{node.GetDirichletBoundary():.3f}"
+        else:
+            text = "Result: None"
+        meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= text, fill="black", font="Arial 8", anchor=NW, width=70)
 
 def drawLine(line):
     from main import Data
@@ -489,3 +507,86 @@ def setStep(step: simStep):
     step_text.config(text= text)
     print(text)
     step_text.update()
+
+def drawColor():
+    from main import Data
+    global meshCanvas, meshWidth, meshHeight, ColorResolution
+
+    if not Data.getHasResult():
+        return
+
+    minValue = np.inf
+    maxValue = -np.inf
+    for node in Data.getMesh():
+        if node.GetValue() is not None:
+            minValue = min(minValue, node.GetValue())
+            maxValue = max(maxValue, node.GetValue())
+    valueRange = maxValue - minValue
+
+    for e in range(Data.getNe()):
+        element_ = element.Element(e)
+        TL = element_.GetNodeTL()
+        BR = element_.GetNodeBR()
+        xmin, ymin = TL.GetCoordinates()
+        xmax, ymax = BR.GetCoordinates()
+        #the border of the individual dolour sections
+        xborder = np.linspace(xmin, xmax, ColorResolution+1)
+        yborder = np.linspace(ymin, ymax, ColorResolution+1)
+        #the probe points in the middle of the sections
+        xprobe = np.linspace(xmin, xmax, 2*ColorResolution+1)[::2]
+        yprobe = np.linspace(ymin, ymax, 2*ColorResolution+1)[::2]
+        for i in range(ColorResolution):
+            for j in range(ColorResolution):
+                x1, y1 = globalToMeshCoords(xborder[i], yborder[j])
+                x2, y2 = globalToMeshCoords(xborder[i+1], yborder[j+1])
+                value = valueInElement(xprobe[i], yprobe[j], e)
+                hottness = (value - minValue) / valueRange #should be from 0 to 1
+                r = int(hottness * 192) + 63
+                g = 63
+                b = int((1 - hottness) * 192) + 63
+                color = "#%02x%02x%02x" % (r, g, b)
+                meshCanvas.create_rectangle(x1, y1, x2, y2, fill=color, outline=color)
+
+
+def valueInElement(x, y, elementId):
+    from main import Data
+
+    element_ = element.Element(elementId)
+    #get the nodes of the elemen
+    TL = element_.GetNodeTL()
+    BL = element_.GetNodeBL()
+    TR = element_.GetNodeTR()
+    BR = element_.GetNodeBR()
+
+    xmin, ymin = TL.GetCoordinates()
+    xmax, ymax = BR.GetCoordinates()
+    assert x >= xmin and x <= xmax, "x not in range of element"
+    assert y >= ymin and y <= ymax, "y not in range of element"
+
+    factorXmax = (x - xmin) / (xmax - xmin)
+    factorXmin = (xmax - x) / (xmax - xmin)
+    factorYmax = (y - ymin) / (ymax - ymin)
+    factorYmin = (ymax - y) / (ymax - ymin)
+
+    #calculate the contribution of each node to the point
+    TLcontribution = factorXmin * factorYmin
+    BLcontribution = factorXmin * factorYmax
+    TRcontribution = factorXmax * factorYmin
+    BRcontribution = factorXmax * factorYmax
+
+    #get the result of each node
+    return TL.GetValue() * TLcontribution + BL.GetValue() * BLcontribution + TR.GetValue() * TRcontribution + BR.GetValue() * BRcontribution
+
+
+def globalToMeshCoords(x, y):
+    from main import Data
+    global meshWidth, meshHeight
+    #convert global coordinates to mesh coordinates
+    margin = 80 
+    largestSize = max(Data.getWidth(), Data.getHeight())
+    scale = (meshWidth - 2 * margin) / largestSize
+    xOffset = (largestSize - Data.getWidth()) / 2
+    yOffset = (largestSize - Data.getHeight()) / 2
+    x_canvas = (x + xOffset) * scale + margin
+    y_canvas = (y + yOffset) * scale + margin
+    return (x_canvas, y_canvas)

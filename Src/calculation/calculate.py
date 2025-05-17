@@ -50,7 +50,14 @@ def calculate():
   gui.setStep(gui.simStep.solveSystem)
 
   result = sparse.linalg.spsolve(systemMatrix, systemVector)
-  print("Result: ", result)
+
+
+  for NodeId in Data.getNE().keys():
+    Data.getMesh()[NodeId].SetResult(result[Data.getNE()[NodeId]])
+  Data.setHasResult(True)
+
+  gui.setStep(gui.simStep.drawingColors)
+  gui.updateGui()
   
   
 

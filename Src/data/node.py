@@ -4,8 +4,28 @@ class Node:
         self.realX = realX
         self.realY = realY
         self.dirichletBoundary = None
+        if self.index == 0:
+            self.dirichletBoundary = 1
+        if self.index == 8:
+            self.dirichletBoundary = 2
         self.rightVonNeumannBoundary = None
         self.belowVonNeumannBoundary = None
+        self.result = None
+
+    def SetResult(self, result: float):
+        assert self.result is None, "Can't set result: already set"
+        assert self.dirichletBoundary is None, "Can't set result: dirichlet is already set"
+        self.result = result
+
+    def GetResult(self):
+        return self.result
+
+    def GetValue(self):
+        assert self.result is not None or self.dirichletBoundary is not None, "Tried accesing Value of Element not set"
+        if self.result is not None:
+            return self.result
+        else:
+            return self.dirichletBoundary
 
     def SetDirichletBoundary(self, Boundary: float):
         assert self.dirichletBoundary is None, "Can't set dirichlet: already set"

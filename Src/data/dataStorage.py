@@ -12,25 +12,29 @@ class DataClass:
         self.height = None
         self.xResolution = None
         self.yResolution = None
-        self.boundary = None
         self.hasMesh = False
         self.mesh = None
+        self.line = None
+        self.hasLine = False
         self.hasIEN = False
         self.IEN = None
         self.hasNE = False
         self.NE = None
         self.JacobianInverseTransposeMap = dict()
+        self.elementMatrixMap = dict()
+        self.hasResult = False
+
+
         
     def reset(self):
         if self.hasSize:
             self.__init__()
     
-    def setSize(self, width, height, boundary, xResolution, yResolution):
+    def setSize(self, width, height, xResolution, yResolution):
         self.width = width
         self.height = height
         self.xResolution = xResolution
         self.yResolution = yResolution
-        self.boundary = boundary
         self.hasSize = True
     
     def hasSize(self):
@@ -51,10 +55,19 @@ class DataClass:
         if(not self.hasSize):
             raise Exception("Size not set!")
         return self.yResolution
-    def getBoundary(self):
-        if(not self.hasSize):
-            raise Exception("Size not set!")
-        return self.boundary
+    
+    def setLine(self, line):
+        if(self.hasLine):
+            raise Exception("Line already set!")
+        if line is not None:
+            self.line = line
+            self.hasLine = True
+    def hasLine(self):
+        return self.hasLine
+    def getLine(self):
+        if(not self.hasLine):
+            return None
+        return self.line
 
     def setMesh(self, mesh):
         if(self.hasMesh):
@@ -112,10 +125,19 @@ class DataClass:
     #Gleichungsarray in:"a=lokale Knotennummer, c=Elementnummer" out:"Gleichungs id"
     def getEQof(self, a, c) -> int:
         return self.getNEof(self.getIENof(a, c))
+    
+    def isEQkey(self, a, c) -> bool:
+        if(not self.hasIEN):
+            raise Exception("IEN not set, when accessing element!")
+        if(not (a,c) in self.IEN):
+            return False
+        if(not self.IEN[(a, c)] in self.NE):
+            return False
+        return True
 
     #number of elements
     def getNe(self) -> int:
-        raise NotImplemented
+        return (self.xResolution -1) * (self.yResolution - 1)
         
     #number of nodes in element
     def getNen(self) -> int:
@@ -125,3 +147,14 @@ class DataClass:
         self.JacobianInverseTransposeMap.update({(width, height): JacobianInverseTranspose})
     def getJacobianInverseTransposeMap(self) ->dict:
         return self.JacobianInverseTransposeMap
+    
+    def addElementMatrixToMap(self, id, elementMatrix) -> None:
+        self.elementMatrixMap.update({id: elementMatrix})
+    def getElementMatrixMap(self) -> dict:
+        return self.elementMatrixMap
+    
+    def setHasResult(self, hasResult) -> None:
+        self.hasResult = hasResult
+
+    def getHasResult(self) -> bool:
+        return self.hasResult

@@ -2,6 +2,7 @@ from tkinter import *
 from interface.CustomCanvas import PanableCanvas
 import numpy as np
 from enum import Enum
+import calculation.element as element
 #config loading and file stuff
 from tkinter import messagebox, filedialog
 import configparser #config file loading
@@ -10,6 +11,8 @@ import pickle #for saving/loading data
 ###default values
 #default config path
 config_path = "settings.conf"
+
+ColorResolution = 64
 
 #default settings
 DEFAULTS = {
@@ -28,19 +31,45 @@ class debugOptions(Enum):
     drawEN = 3
     drawLines = 4
     drawNodes = 5
+    drawValues = 6
 
 debugSettings = {
     debugOptions.drawID : False,
     debugOptions.drawEQ : False,
     debugOptions.drawEN : False,
     debugOptions.drawLines : True,
-    debugOptions.drawNodes : False
+    debugOptions.drawNodes : True,
+    debugOptions.drawValues : True
 }
 
 width = None
 height = None
 boundary_conditions_str = None
 meshWidth = meshHeight = 1000
+
+class simStep(Enum):
+    none = 0
+    started = 1
+    meshGen = 2
+    boundaryConditions = 3
+    meshTables = 4
+    systemMatrix = 5
+    solveSystem = 6
+    drawingColors = 7
+    finished = 8
+    simStepNum = 9
+
+SimSteps = {
+    simStep.none: "None",
+    simStep.started: "Started",
+    simStep.meshGen: "Mesh Generation",
+    simStep.boundaryConditions: "Boundary Conditions",
+    simStep.meshTables: "Mesh Tables",
+    simStep.systemMatrix: "System Matrix",
+    simStep.solveSystem: "Solve System",
+    simStep.drawingColors: "Drawing Colors",
+    simStep.finished: "Finished"
+}
 
 #load settings from file
 def load_settings(path=None):
@@ -109,12 +138,26 @@ def get_yResolution():
     except ValueError:
         #return default if invalid
         return 10
-
+    
+def get_line():
+    split = (lineInputXY.get().replace(',', ' ').replace(',',' ')).split()
+    if len(split) != 4:
+        return None
+    try:
+        x1,y1,x2,y2 = map(float, split)
+    except ValueError:
+        return None
+    width_float = float(width.get())
+    height_float = float(height.get())
+    if (x1 or x2 or y1 or y2) <= 0 or (x1 or x2) >= width_float or (y1 or y2) >= height_float:
+        raise ValueError
+    return np.array([x1,y1,x2,y2])
+    
 
 
 
 def create():
-    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path
+    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path, lineInputXY, step_text
     #try load settings from file
     #if not found, use default values
     settings = load_settings()
@@ -185,6 +228,10 @@ def create():
     boundary_conditions_dropdown = OptionMenu(root, boundary_conditions_str, "dirichlet", "neumann")
     boundary_conditions_dropdown.grid(row=6, column=1)
 
+    Label(root, text="Line input (X1, Y1 X2,Y2):").grid(row=2, column=0,)
+    lineInputXY = Entry(root)
+    lineInputXY.grid(row=2, column=1)
+
     
     drawMesh = IntVar(value=int(settings['drawMesh']))
     Label(root, text="draw Mesh:").grid(row=2, column=2)
@@ -196,7 +243,11 @@ def create():
     #from main import main_simulation 
     #start_button = Button(root, text="Start", command=main_simulation)
     start_button = Button(root, text="Start", command=lambda: __import__('main').main_simulation())
-    start_button.grid(row=16, column=0, columnspan=2)
+    start_button.grid(row=16, column=0, columnspan=1)
+    
+    step_text = Label(root, text="Sim Step: None")
+    step_text.grid(row=16, column=1, columnspan=1)
+    setStep(simStep.none)
     
     #load settings button
     def on_load():
@@ -297,8 +348,11 @@ def updateGui():
         #update the mesh in the gui
         meshCanvas.delete("all")
         if(drawMesh.get()):
+            if(debugSettings[debugOptions.drawValues] and Data.getHasResult()):
+                drawColor()
             mesh = Data.getMesh()
             drawArrow()
+            drawLine(Data.getLine())
             
             if((debugSettings[debugOptions.drawNodes]) or (not debugSettings[debugOptions.drawID]) or (debugSettings[debugOptions.drawEQ])):
                 for node in mesh:
@@ -400,7 +454,7 @@ def drawNode(node):
         except Exception as error:
             EQid = error.__str__()
         finally:
-            meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= EQid, fill="black", font="Arial 8", anchor=NW, width=70)
+            meshCanvas.create_text(x - nodeRadius, y + nodeRadius, text= EQid, fill="black", font="Arial 8", anchor=NE, width=70)
     
     if(debugSettings[debugOptions.drawEN]):
         EN = None
@@ -413,3 +467,130 @@ def drawNode(node):
             EN = error.__str__()
         finally:
             meshCanvas.create_text(x - nodeRadius, y - nodeRadius, text= EN, fill="black", font="Arial 8", anchor=SE, width=90)
+
+    if(debugSettings[debugOptions.drawValues]):
+        if(not node.GetResult() is None):
+            text = "Result:" + f"{node.GetResult():.3f}"
+        elif(not node.GetDirichletBoundary() is None):
+            text = "Dirichlet:" + f"{node.GetDirichletBoundary():.3f}"
+        else:
+            text = "Result: None"
+        meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= text, fill="black", font="Arial 8", anchor=NW, width=70)
+
+def drawLine(line):
+    from main import Data
+    global meshCanvas, meshWidth, meshHeight
+    if not Data.hasLine:
+        return
+    #draw the line in the mesh
+    lineThickness = 2
+    margin = 80
+
+    x1, y1, x2, y2 = line
+    largestSize = max(Data.getWidth(), Data.getHeight())
+    scale = (meshWidth - 2 * margin) / largestSize
+    xOffset = (largestSize - Data.getWidth()) / 2
+    yOffset = (largestSize - Data.getHeight()) / 2
+    x1_canvas = (x1 + xOffset) * scale + margin
+    y1_canvas = (y1 + yOffset) * scale + margin
+    x2_canvas = (x2 + xOffset) * scale + margin
+    y2_canvas = (y2 + yOffset) * scale + margin
+
+    coords1 = (x1_canvas, y1_canvas)
+    coords2 = (x2_canvas, y2_canvas)
+    meshCanvas.create_line(coords1, coords2, width=lineThickness+0.5, fill='#AAA', smooth=True)
+    meshCanvas.create_line(coords1, coords2, width=lineThickness, fill='#000', smooth=True)
+
+def setStep(step: simStep):
+    global step_text, SimSteps
+    text = " Sim Step [" + str(step.value) + "/" + str(simStep.simStepNum.value - 1) + "]: " + SimSteps[step]
+    step_text.config(text= text)
+    print(text)
+    step_text.update()
+
+def drawColor():
+    from main import Data
+    global meshCanvas, meshWidth, meshHeight, ColorResolution
+    colorRes = ColorResolution / max(Data.getXResolution(), Data.getYResolution())
+    colorRes = max(1, int(colorRes))
+
+    if not Data.getHasResult():
+        return
+
+    minValue = np.inf
+    maxValue = -np.inf
+    for node in Data.getMesh():
+        if node.GetValue() is not None:
+            minValue = min(minValue, node.GetValue())
+            maxValue = max(maxValue, node.GetValue())
+    valueRange = maxValue - minValue
+
+    for e in range(Data.getNe()):
+        element_ = element.Element(e)
+        TL = element_.GetNodeTL()
+        BR = element_.GetNodeBR()
+        xmin, ymin = TL.GetCoordinates()
+        xmax, ymax = BR.GetCoordinates()
+        #the border of the individual dolour sections
+        xborder = np.linspace(xmin, xmax, colorRes+1)
+        yborder = np.linspace(ymin, ymax, colorRes+1)
+        #the probe points in the middle of the sections
+        xprobe = np.linspace(xmin, xmax, 2*colorRes+1)[::2]
+        yprobe = np.linspace(ymin, ymax, 2*colorRes+1)[::2]
+        for i in range(colorRes):
+            for j in range(colorRes):
+                x1, y1 = globalToMeshCoords(xborder[i], yborder[j])
+                x2, y2 = globalToMeshCoords(xborder[i+1], yborder[j+1])
+                value = valueInElement(xprobe[i], yprobe[j], e)
+                if valueRange == 0:
+                    valueRange = 1
+                hottness = (value - minValue) / valueRange #should be from 0 to 1
+                r = int(hottness * 192) + 63
+                g = 63
+                b = int((1 - hottness) * 192) + 63
+                color = "#%02x%02x%02x" % (r, g, b)
+                meshCanvas.create_rectangle(x1, y1, x2, y2, fill=color, outline=color)
+
+
+def valueInElement(x, y, elementId):
+    from main import Data
+
+    element_ = element.Element(elementId)
+    #get the nodes of the elemen
+    TL = element_.GetNodeTL()
+    BL = element_.GetNodeBL()
+    TR = element_.GetNodeTR()
+    BR = element_.GetNodeBR()
+
+    xmin, ymin = TL.GetCoordinates()
+    xmax, ymax = BR.GetCoordinates()
+    assert x >= xmin and x <= xmax, "x not in range of element"
+    assert y >= ymin and y <= ymax, "y not in range of element"
+
+    factorXmax = (x - xmin) / (xmax - xmin)
+    factorXmin = (xmax - x) / (xmax - xmin)
+    factorYmax = (y - ymin) / (ymax - ymin)
+    factorYmin = (ymax - y) / (ymax - ymin)
+
+    #calculate the contribution of each node to the point
+    TLcontribution = factorXmin * factorYmin
+    BLcontribution = factorXmin * factorYmax
+    TRcontribution = factorXmax * factorYmin
+    BRcontribution = factorXmax * factorYmax
+
+    #get the result of each node
+    return TL.GetValue() * TLcontribution + BL.GetValue() * BLcontribution + TR.GetValue() * TRcontribution + BR.GetValue() * BRcontribution
+
+
+def globalToMeshCoords(x, y):
+    from main import Data
+    global meshWidth, meshHeight
+    #convert global coordinates to mesh coordinates
+    margin = 80 
+    largestSize = max(Data.getWidth(), Data.getHeight())
+    scale = (meshWidth - 2 * margin) / largestSize
+    xOffset = (largestSize - Data.getWidth()) / 2
+    yOffset = (largestSize - Data.getHeight()) / 2
+    x_canvas = (x + xOffset) * scale + margin
+    y_canvas = (y + yOffset) * scale + margin
+    return (x_canvas, y_canvas)

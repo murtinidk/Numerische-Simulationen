@@ -303,16 +303,17 @@ def create():
         try:
             with open(file_path, 'rb') as file:
                 from main import Data
-                loaded_data = pickle.load(file)
-                #transfer loaded data to data class
-                for attr_name in dir(loaded_data):
-                    if not attr_name.startswith('__'):
-                        setattr(Data, attr_name, getattr(loaded_data, attr_name))
-            print(f"Data loaded from {file_path}")
-            #update the gui
-            updateGui()
+                pickle_data = pickle.load(file)
+                #check if data is right type
+                if isinstance(pickle_data, type(Data)):
+                    #update the Data object with the loaded data
+                    Data.__dict__.update(pickle_data.__dict__)
+                else:
+                    raise TypeError("Loaded data is not of type Data")
         except Exception as e:
             messagebox.showerror("Load Error", f"Failed to load data:\n{e}")
+        #update the gui
+        updateGui()
     
     Button(root, text="Load Data", command=lambda: load_data_button(filedialog.askopenfilename(
         title="Load data",

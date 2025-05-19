@@ -20,7 +20,17 @@ DEFAULTS = {
     'height': '10',
     'xResolution': '10',
     'yResolution': '10',
-    'boundary': 'dirichlet',
+    # 'boundary': 'dirichlet',
+    'topBoundaryType': 'neumann',
+    'rightBoundaryType': 'dirichlet',
+    'bottomBoundaryType': 'dirichlet',
+    'leftBoundaryType': 'dirichlet',
+    #values
+    'topBoundaryValue': '0',
+    'rightBoundaryValue': '0',
+    'bottomBoundaryValue': '0',
+    'leftBoundaryValue': '0',
+    
     'drawMesh': '1'
 }
 
@@ -222,11 +232,48 @@ def create():
     yResolution.insert(0, settings['yResolution'])
     yResolution.grid(row=1, column=3)
 
+    #-----------------BOUNDARY INPUT-----------------
+    #------------- TOP, RIGHT, BOTTOM, LEFT ---------
     Label(root, text="Boundary Conditions:").grid(row=6, column=0)
-    boundary_conditions_str = StringVar(root)
-    boundary_conditions_str.set(settings['boundary'])
-    boundary_conditions_dropdown = OptionMenu(root, boundary_conditions_str, "dirichlet", "neumann")
-    boundary_conditions_dropdown.grid(row=6, column=1)
+    #Subframe/grid
+    boundary_frame = Frame(root)
+    boundary_frame.grid(row=6, column=1, rowspan=2)
+    bfieldwidth = 7
+    #TOP
+    Label(boundary_frame, text="Top:").grid(row=0, column=0)
+    top_value = Entry(boundary_frame, width=bfieldwidth) # make value entry field smaller...
+    top_value.insert(0,settings['topBoundaryValue']) #insert from loaded or default settings
+    top_value.grid(row=0, column=1)
+    top_boundary = StringVar(root, settings['topBoundaryType'])
+    OptionMenu(boundary_frame, top_boundary, "dirichlet", "neumann").grid(row=1, column=1)
+    #Right
+    Label(boundary_frame, text="Right:").grid(row=0, column=2)
+    right_value = Entry(boundary_frame, width=bfieldwidth)
+    right_value.insert(0, settings['rightBoundaryValue'])
+    right_value.grid(row=0, column=3)
+    right_boundary = StringVar(root, settings['rightBoundaryType'])
+    OptionMenu(boundary_frame, right_boundary, "dirichlet", "neumann").grid(row=1, column=3)
+    
+    #bottom
+    Label(boundary_frame, text="Bottom:").grid(row=0, column=4)
+    bottom_value = Entry(boundary_frame, width=bfieldwidth)
+    bottom_value.insert(0, settings['bottomBoundaryValue'])
+    bottom_value.grid(row=0, column=5)
+    bottom_boundary = StringVar(root, settings['bottomBoundaryType'])
+    OptionMenu(boundary_frame, bottom_boundary, "dirichlet", "neumann").grid(row=1, column=5)
+    
+    #left
+    Label(boundary_frame, text="Left:").grid(row=0, column=6)
+    left_value = Entry(boundary_frame, width=bfieldwidth)
+    left_value.insert(0, settings['leftBoundaryValue'])
+    left_value.grid(row=0, column=7)
+    left_boundary = StringVar(root, settings['leftBoundaryType'])
+    OptionMenu(boundary_frame, left_boundary, "dirichlet", "neumann").grid(row=1, column=7)
+    
+    # boundary_conditions_str = StringVar(root)
+    # boundary_conditions_str.set(settings['boundary'])
+    # boundary_conditions_dropdown = OptionMenu(root, boundary_conditions_str, "dirichlet", "neumann")
+    # boundary_conditions_dropdown.grid(row=8, column=1)
 
     Label(root, text="Line input (X1, Y1 X2,Y2):").grid(row=2, column=0,)
     lineInputXY = Entry(root)

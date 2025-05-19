@@ -23,6 +23,7 @@ DEFAULTS = {
     'rightBoundaryType': 'dirichlet',
     'bottomBoundaryType': 'dirichlet',
     'leftBoundaryType': 'dirichlet',
+    'line_type': 'dirichlet',
     #values
     'topBoundaryValue': '0',
     'rightBoundaryValue': '0',
@@ -147,28 +148,31 @@ def get_yResolution():
         return 10
     
 def get_line():
-    split = (lineInputXY.get().replace(',', ' ').replace(',',' ')).split()
-    if len(split) != 4:
-        return None
+    x = int(width.get())
+    y = int(height.get())
     try:
-        x1,y1,x2,y2 = map(float, split)
+        x1 = float(X1.get())
+        y1 = float(Y1.get())
+        x2 = float(X2.get())
+        y2 = float(Y2.get())
+        value = float(line_value.get())
     except ValueError:
         return None
-    width_float = float(width.get())
-    height_float = float(height.get())
-    if (x1 or x2 or y1 or y2) <= 0 or (x1 or x2) >= width_float or (y1 or y2) >= height_float:
+    if x1 <= 0 or x2 <= 0 or y1 <= 0 or y2 <= 0 or x1 >= x or x2 >= x or y1 >= y or y2 >= y:
         raise ValueError
-    return np.array([x1,y1,x2,y2])
+    return np.array([x1,y1,x2,y2, value])
     
 
 
 
 def create():
-    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path, lineInputXY, step_text
+    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path, step_text
+    global X1, Y1, X2, Y2, line_frame, line_value, line_type
     global top_value, top_boundary, right_value, right_boundary, bottom_boundary, bottom_value, left_boundary, left_value
     #default config path
     global config_path
     config_path = "settings.conf"
+    line_type = ''
 
     #try load settings from file
     #if not found, use default values
@@ -273,9 +277,31 @@ def create():
     # boundary_conditions_dropdown = OptionMenu(root, boundary_conditions_str, "dirichlet", "neumann")
     # boundary_conditions_dropdown.grid(row=8, column=1)
 
-    Label(root, text="Line input (X1, Y1 X2,Y2):").grid(row=2, column=0,)
-    lineInputXY = Entry(root)
-    lineInputXY.grid(row=2, column=1)
+    Label(root, text="Line Input:").grid(row=4, column=0)
+
+    line_frame = Frame(root)
+    line_frame.grid(row=4, column=1, rowspan=1, columnspan=1)
+    lfieldwidth = 7
+
+    Label(line_frame, text="X1:").grid(row=0, column=0)
+    X1 = Entry(line_frame, width=lfieldwidth)
+    X1.grid(row=0, column=1)
+    Label(line_frame, text="Y1:").grid(row=0, column=2)
+    Y1 = Entry(line_frame, width=lfieldwidth)
+    Y1.grid(row=0, column=3)
+    Label(line_frame, text="X2:").grid(row=0, column=4)
+    X2 = Entry(line_frame, width=lfieldwidth)
+    X2.grid(row=0, column=5)
+    Label(line_frame, text="Y2:").grid(row=0, column=6)
+    Y2 = Entry(line_frame, width=lfieldwidth)
+    Y2.grid(row=0, column=7)
+    Label(line_frame, text="Line Value:").grid(row=0, column=8)
+    line_value = Entry(line_frame, width=lfieldwidth)
+    line_value.grid(row=0, column=9)
+    line_type = StringVar(root, settings['line_type'])
+    OptionMenu(line_frame, line_type, "dirichlet", "neumann").grid(row=0, column=11)
+    
+
 
     
     drawMesh = IntVar(value=int(settings['drawMesh']))

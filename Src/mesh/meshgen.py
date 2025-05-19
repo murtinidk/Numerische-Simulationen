@@ -32,8 +32,14 @@ def meshgen():
     gui.setStep(gui.simStep.boundaryConditions)
     line = Data.getLine()
     if line is not None:
+        resolution = 100
+        xs = np.linspace(line[0], line[2], resolution)
+        ys = np. linspace(line[1], line[3], resolution)
+        line_coords = np.column_stack((xs, ys))
         tree = BallTree(combinations[:, 1:3], leaf_size=1, metric='euclidean')
-        index = tree.query_radius(np.array([[4.7,4.7]]), 1, return_distance=False)
+        index = tree.query_radius(line_coords, 1, return_distance=False)
+        flat_indices = np.unique(np.concatenate(index))
+        print(flat_indices)
 
     #TODO add boundary conditioins here
     

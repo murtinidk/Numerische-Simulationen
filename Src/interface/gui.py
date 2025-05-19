@@ -9,8 +9,6 @@ import configparser #config file loading
 import os #file loading
 import pickle #for saving/loading data
 ###default values
-#default config path
-config_path = "settings.conf"
 
 ColorResolution = 64
 
@@ -34,7 +32,6 @@ DEFAULTS = {
     'drawMesh': '1'
 }
 
-
 class debugOptions(Enum):
     drawID = 1
     drawEQ = 2
@@ -54,7 +51,7 @@ debugSettings = {
 
 width = None
 height = None
-boundary_conditions_str = None
+# boundary_conditions_str = None
 meshWidth = meshHeight = 1000
 
 class simStep(Enum):
@@ -86,13 +83,13 @@ def load_settings(path=None):
     cfg = configparser.ConfigParser()
     #get default values
     vals = DEFAULTS.copy()
-    file_to_load = path or config_path
+    file_to_load = config_path
     if os.path.exists(file_to_load):
         try:
             cfg.read(file_to_load)
             #overwrite default values with loaded values
             for key in DEFAULTS:
-                vals[key] = cfg.get('Mesh', key, fallback=DEFAULTS[key])
+                vals[key] = cfg.get('FEM Sim Config', key, fallback=DEFAULTS[key])
         except Exception as e:
             messagebox.showerror("Load Error", f"Failed to load settings:\n{e}")
     else:
@@ -104,7 +101,7 @@ def load_settings(path=None):
 def save_settings(vals, path=None):
     #save settings to default or specified path
     cfg = configparser.ConfigParser()
-    cfg['Mesh'] = vals
+    cfg['FEM Sim Config'] = vals
     file_to_save = path or config_path
     try:
         with open(file_to_save, 'w') as f:
@@ -168,6 +165,11 @@ def get_line():
 
 def create():
     global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path, lineInputXY, step_text
+    global top_value, top_boundary, right_value, right_boundary, bottom_boundary, bottom_value, left_boundary, left_value
+    #default config path
+    global config_path
+    config_path = "settings.conf"
+
     #try load settings from file
     #if not found, use default values
     settings = load_settings()
@@ -186,8 +188,10 @@ def create():
     Label(root, text="Config File:").grid(row=6, column=2, sticky=E)
     config_label = Label(root, text=config_path, anchor=W)
     config_label.grid(row=6, column=3, columnspan=3, sticky=W+E)
-    def choose_file():
-        nonlocal config_label
+    
+    def choose_setting_file():
+        global config_path
+        
         file = filedialog.askopenfilename(
             title="Select config file",
             filetypes=[("INI files", "*.conf *.ini"), ("All files", "*")]
@@ -196,16 +200,10 @@ def create():
             config_path = file
             config_label.config(text=config_path)
             # reload with new file
-            vals = load_settings(config_path)
-            # update entries
-            width.delete(0, END); width.insert(0, vals['width'])
-            height.delete(0, END); height.insert(0, vals['height'])
-            xResolution.delete(0, END); xResolution.insert(0, vals['xResolution'])
-            yResolution.delete(0, END); yResolution.insert(0, vals['yResolution'])
-            boundary_conditions_str.set(vals['boundary'])
-            drawMesh.set(int(vals['drawMesh']))
-
-    Button(root, text="Choose Config File", command=choose_file).grid(row=6, column=2)
+            # vals = load_settings(config_path)
+            
+    #this button is only for selecting the path, loading and saving from path is per own button
+    Button(root, text="Choose Config File", command=choose_setting_file).grid(row=6, column=2)
 
 
 
@@ -297,29 +295,46 @@ def create():
     setStep(simStep.none)
     
     #load settings button
-    def on_load():
+    def load_settings_button():
+        #takes path from config_path from function/button selecting the settings file 
         vals = load_settings(config_path)
+        #update the gui with the loaded values
         width.delete(0, END); width.insert(0, vals['width'])
         height.delete(0, END); height.insert(0, vals['height'])
         xResolution.delete(0, END); xResolution.insert(0, vals['xResolution'])
         yResolution.delete(0, END); yResolution.insert(0, vals['yResolution'])
-        boundary_conditions_str.set(vals['boundary'])
+        top_boundary.set(vals['topBoundaryType'])
+        right_boundary.set(vals['rightBoundaryType'])
+        bottom_boundary.set(vals['bottomBoundaryType'])
+        left_boundary.set(vals['leftBoundaryType'])
+        top_value.delete(0, END); top_value.insert(0, vals['topBoundaryValue'])
+        right_value.delete(0, END); right_value.insert(0, vals['rightBoundaryValue'])
+        bottom_value.delete(0, END); bottom_value.insert(0, vals['bottomBoundaryValue'])
+        left_value.delete(0, END); left_value.insert(0, vals['leftBoundaryValue'])
         drawMesh.set(int(vals['drawMesh']))
 
     #save settings button
-    def on_save_click():
+    def save_setting_button():
         vals = {
             'width': width.get(),
             'height': height.get(),
             'xResolution': xResolution.get(),
             'yResolution': yResolution.get(),
-            'boundary': boundary_conditions_str.get(),
+            # 'boundary': boundary_conditions_str.get(),
+            'topBoundaryType': top_boundary.get(),
+            'rightBoundaryType': right_boundary.get(),
+            'bottomBoundaryType': bottom_boundary.get(),
+            'leftBoundaryType': left_boundary.get(),
+            'topBoundaryValue': top_value.get(),
+            'rightBoundaryValue': right_value.get(),
+            'bottomBoundaryValue': bottom_value.get(),
+            'leftBoundaryValue': left_value.get(),
             'drawMesh': str(drawMesh.get())
         }
         save_settings(vals, config_path)
 
-    Button(root, text="Load Settings", command=on_load).grid(row=7, column=2)
-    Button(root, text="Save Settings", command=on_save_click).grid(row=8, column=2)
+    Button(root, text="Load Settings", command=load_settings_button).grid(row=7, column=2)
+    Button(root, text="Save Settings", command=save_setting_button).grid(row=8, column=2)
 
     #program data loading/saving    
     def save_data_button(file_path):

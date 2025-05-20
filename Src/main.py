@@ -15,6 +15,7 @@
 #inclusions
 import interface.gui as gui
 import data.dataStorage as data
+from tkinter import messagebox
 
 # initialize the data storage
 Data: data.DataClass = data.DataClass()
@@ -23,13 +24,17 @@ Data: data.DataClass = data.DataClass()
 def main_simulation(): 
     gui.setStep(gui.simStep.started)
     global Data
-    Data.reset()
-    Data.setSize(gui.get_width(), gui.get_height(), gui.get_xResolution(), gui.get_yResolution())
-    Data.setLine(gui.get_line())
-    from mesh.meshgen import meshgen 
-    meshgen()
-    from calculation.calculate import calculate
-    calculate()
+    try:
+        Data.reset()
+        Data.setSize(gui.get_width(), gui.get_height(), gui.get_xResolution(), gui.get_yResolution())
+        Data.setLine(gui.get_line())
+        from mesh.meshgen import meshgen 
+        meshgen()
+        from calculation.calculate import calculate
+        calculate()
+    except Exception as e:
+        messagebox.showerror("Unresolved Error in Simulation", f"There was an uncaught Exception:\n{e}")
+        return
 
     gui.setStep(gui.simStep.finished)
 

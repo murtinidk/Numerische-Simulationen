@@ -114,7 +114,6 @@ def save_settings(vals, path=None):
     except Exception as e:
         messagebox.showerror("Save Error", f"Failed to save settings:\n{e}")
 
-
 def get_width():
     try:
         return int(width.get())
@@ -165,9 +164,6 @@ def get_line():
         raise ValueError
     return np.array([x1,y1,x2,y2, value])
     
-
-
-
 def create():
     global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path, step_text
     global X1, Y1, X2, Y2, line_frame, line_value, line_type
@@ -181,7 +177,6 @@ def create():
     #if not found, use default values
     settings = load_settings()
 
-
     #main window
     root = Tk()
     img = PhotoImage(file='./resources/logo.png')
@@ -190,7 +185,6 @@ def create():
     root.geometry("1500x1200")
     root.tk_setPalette( "#FFFFFF" ) #fix linux color issues
 
-    
     #CONFIG FILE PICKER 
     Label(root, text="Config File:").grid(row=6, column=2, sticky=E)
     config_label = Label(root, text=config_path, anchor=W)
@@ -211,9 +205,6 @@ def create():
             
     #this button is only for selecting the path, loading and saving from path is per own button
     Button(root, text="Choose Config File", command=choose_setting_file).grid(row=6, column=2)
-
-
-
 
     #create input for mesh width and height
     Label(root, text="Width:").grid(row=0, column=0)
@@ -303,9 +294,6 @@ def create():
     line_value.grid(row=0, column=9)
     line_type = StringVar(root, settings['line_type'])
     OptionMenu(line_frame, line_type, "dirichlet", "neumann").grid(row=0, column=11)
-    
-
-
     
     drawMesh = IntVar(value=int(settings['drawMesh']))
     Label(root, text="draw Mesh:").grid(row=2, column=2)
@@ -420,7 +408,6 @@ def create():
     #todo: add quit function, maybe in main.py?
     #for freeing resources, maybe add a quit button to the gui
 
-    
 #unused
 def closeGui():
     #close the gui
@@ -431,7 +418,6 @@ def closeGui():
     meshCanvas.delete("all")
     meshCanvas.destroy()
     print("GUI closed")    
-
 
 def updateGui():
     from main import Data
@@ -472,37 +458,14 @@ def drawArrow():
     meshCanvas.create_text(yArrowCoordsEnd, text= "Y", fill="black", font="Arial 10", anchor=N)
     meshCanvas.create_line(yArrowCoordsBegining, yArrowCoordsEnd, arrow=LAST, width=3)
 
+#draw a element in the mesh
+#there would be faster ways to just dra a mesh, but we want to check the correctness of the IEN dict
 def drawElement(elementId):
     from main import Data
     global meshCanvas, meshWidth, meshHeight
     
     if(not Data.hasIEN):
         return
-    #draw a element in the mesh
-    '''
-    margin = 80
-    lineThickness = 1
-    
-    largestSize = max(Data.getWidth(), Data.getHeight())
-    scale = (meshWidth - 2 * margin) / largestSize
-    xOffset = (largestSize - Data.getWidth()) / 2
-    yOffset = (largestSize - Data.getHeight()) / 2
-    
-    coordsTL = coordsBL = coordsTR = coordsBR = None
-    #get the nodes of the element
-    ienKeys = Data.getIEN().keys()
-    if((0, elementId) in ienKeys):
-        coordsTL = Data.mesh[Data.getIENof(0, elementId)].GetCoordinates()
-        coordsTL = tuple([(coordsTL[0] + xOffset)*scale + margin, (coordsTL[1] + yOffset)*scale + margin])
-    if((1, elementId) in ienKeys):
-        coordsTR = Data.mesh[Data.getIENof(1, elementId)].GetCoordinates()
-        coordsTR = tuple([(coordsTR[0] + xOffset)*scale + margin, (coordsTR[1] + yOffset)*scale + margin])
-    if((2, elementId) in ienKeys):
-        coordsBL = Data.mesh[Data.getIENof(2, elementId)].GetCoordinates()
-        coordsBL = tuple([(coordsBL[0] + xOffset)*scale + margin, (coordsBL[1] + yOffset)*scale + margin])
-    if((3, elementId) in ienKeys):
-        coordsBR = Data.mesh[Data.getIENof(3, elementId)].GetCoordinates()
-        coordsBR = tuple([(coordsBR[0] + xOffset)*scale + margin, (coordsBR[1] + yOffset)*scale + margin])'''
     
     lineThickness = 1
     coordsTL = coordsBL = coordsTR = coordsBR = None
@@ -546,7 +509,6 @@ def drawNode(node):
     if(debugSettings[debugOptions.drawID]):
         meshCanvas.create_text(x + nodeRadius, y - nodeRadius, text= "id:" + str(node.GetIndex()), fill="black", font="Arial 8", anchor=SW)
 
-    
     if(debugSettings[debugOptions.drawEQ]):
         EQid = None
         try:
@@ -642,7 +604,6 @@ def drawColor():
                 color = "#%02x%02x%02x" % (r, g, b)
                 meshCanvas.create_rectangle(x1, y1, x2, y2, fill=color, outline=color)
 
-
 def valueInElement(x, y, elementId):
     from main import Data
 
@@ -671,7 +632,6 @@ def valueInElement(x, y, elementId):
 
     #get the result of each node
     return TL.GetValue() * TLcontribution + BL.GetValue() * BLcontribution + TR.GetValue() * TRcontribution + BR.GetValue() * BRcontribution
-
 
 def globalToMeshCoords(x, y):
     from main import Data

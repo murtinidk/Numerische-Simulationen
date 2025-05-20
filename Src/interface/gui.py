@@ -11,6 +11,7 @@ import pickle #for saving/loading data
 ###default values
 
 ColorResolution = 64
+Margin = 80
 
 #default settings
 DEFAULTS = {
@@ -40,14 +41,16 @@ class debugOptions(Enum):
     drawLines = 4
     drawNodes = 5
     drawValues = 6
+    writeValues = 7
 
 debugSettings = {
-    debugOptions.drawID : False,
-    debugOptions.drawEQ : False,
-    debugOptions.drawEN : False,
+    debugOptions.drawID : True,
+    debugOptions.drawEQ : True,
+    debugOptions.drawEN : True,
     debugOptions.drawLines : True,
     debugOptions.drawNodes : True,
-    debugOptions.drawValues : True
+    debugOptions.drawValues : True,
+    debugOptions.writeValues : True
 }
 
 width = None
@@ -455,24 +458,20 @@ def drawArrow():
     from main import Data
     global meshCanvas, meshWidth, meshHeight
     #draw the arrow in the mesh
-    margin = 80
-    largestSize = max(Data.getWidth(), Data.getHeight())
-    scale = (meshWidth - 2 * margin) / largestSize
-    xOffset = (largestSize - Data.getWidth()) / 2
-    yOffset = (largestSize - Data.getHeight()) / 2
+    xArrowCoordsBegining = globalToMeshCoords(0, 0)
+    xArrowCoordsEnd = globalToMeshCoords(Data.getWidth(),0)
+    yArrowCoordsBegining = globalToMeshCoords(0, 0)	
+    yArrowCoordsEnd = globalToMeshCoords(0, Data.getHeight())
+    xArrowCoordsBegining = (xArrowCoordsBegining[0], xArrowCoordsBegining[1] - 2*Margin/3)
+    xArrowCoordsEnd = (xArrowCoordsEnd[0], xArrowCoordsEnd[1] - 2*Margin/3)
+    yArrowCoordsBegining = (yArrowCoordsBegining[0] - 2*Margin/3, yArrowCoordsBegining[1])
+    yArrowCoordsEnd = (yArrowCoordsEnd[0] - 2*Margin/3, yArrowCoordsEnd[1])
 
-    xArrowCoordsBegining = tuple([(0 + xOffset)*scale + margin, margin/3])
-    xArrowCoordsEnd =      tuple([(Data.getWidth() +xOffset)*scale + margin, margin/3])
-    yArrowCoordsBegining = tuple([margin/3, (0 + yOffset)*scale + margin])
-    yArrowCoordsEnd =      tuple([margin/3, (Data.getHeight() + yOffset)*scale + margin])
-
-    
     meshCanvas.create_text(xArrowCoordsEnd, text= "X", fill="black", font="Arial 10", anchor=W)
     meshCanvas.create_line(xArrowCoordsBegining, xArrowCoordsEnd, arrow=LAST, width=3)
     meshCanvas.create_text(yArrowCoordsEnd, text= "Y", fill="black", font="Arial 10", anchor=N)
     meshCanvas.create_line(yArrowCoordsBegining, yArrowCoordsEnd, arrow=LAST, width=3)
 
-        
 def drawElement(elementId):
     from main import Data
     global meshCanvas, meshWidth, meshHeight
@@ -480,6 +479,7 @@ def drawElement(elementId):
     if(not Data.hasIEN):
         return
     #draw a element in the mesh
+    '''
     margin = 80
     lineThickness = 1
     
@@ -502,7 +502,23 @@ def drawElement(elementId):
         coordsBL = tuple([(coordsBL[0] + xOffset)*scale + margin, (coordsBL[1] + yOffset)*scale + margin])
     if((3, elementId) in ienKeys):
         coordsBR = Data.mesh[Data.getIENof(3, elementId)].GetCoordinates()
-        coordsBR = tuple([(coordsBR[0] + xOffset)*scale + margin, (coordsBR[1] + yOffset)*scale + margin])
+        coordsBR = tuple([(coordsBR[0] + xOffset)*scale + margin, (coordsBR[1] + yOffset)*scale + margin])'''
+    
+    lineThickness = 1
+    coordsTL = coordsBL = coordsTR = coordsBR = None
+    ienKeys = Data.getIEN().keys()
+    if((0, elementId) in ienKeys):
+        coordsTL = Data.mesh[Data.getIENof(0, elementId)].GetCoordinates()
+        coordsTL = globalToMeshCoords(coordsTL[0], coordsTL[1])
+    if((1, elementId) in ienKeys):
+        coordsTR = Data.mesh[Data.getIENof(1, elementId)].GetCoordinates()
+        coordsTR = globalToMeshCoords(coordsTR[0], coordsTR[1])
+    if((2, elementId) in ienKeys):
+        coordsBL = Data.mesh[Data.getIENof(2, elementId)].GetCoordinates()
+        coordsBL = globalToMeshCoords(coordsBL[0], coordsBL[1])
+    if((3, elementId) in ienKeys):
+        coordsBR = Data.mesh[Data.getIENof(3, elementId)].GetCoordinates()
+        coordsBR = globalToMeshCoords(coordsBR[0], coordsBR[1])
     
     if((not coordsTL is None) and (not coordsBL is None)):
         meshCanvas.create_line(coordsTL, coordsBL, width=lineThickness)
@@ -522,12 +538,7 @@ def drawNode(node):
     nodeRadius = 3
 
     x, y = node.GetCoordinates()
-    largestSize = max(Data.getWidth(), Data.getHeight())
-    x += (largestSize - Data.getWidth()) / 2
-    y += (largestSize - Data.getHeight()) / 2
-    x = int(x / (largestSize) * (meshWidth - 2 * margin) + margin)
-    y = int(y / (largestSize) * (meshWidth - 2 * margin) + margin)
-
+    x, y = globalToMeshCoords(x, y)
     
     if(debugSettings[debugOptions.drawNodes]):
         meshCanvas.create_oval(x-nodeRadius, y-nodeRadius, x+nodeRadius, y+nodeRadius, fill="black")
@@ -557,7 +568,7 @@ def drawNode(node):
         finally:
             meshCanvas.create_text(x - nodeRadius, y - nodeRadius, text= EN, fill="black", font="Arial 8", anchor=SE, width=90)
 
-    if(debugSettings[debugOptions.drawValues]):
+    if(debugSettings[debugOptions.writeValues]):
         if(not node.GetResult() is None):
             text = "Result:" + f"{node.GetResult():.3f}"
         elif(not node.GetDirichletBoundary() is None):
@@ -571,22 +582,13 @@ def drawLine(line):
     global meshCanvas, meshWidth, meshHeight
     if not Data.hasLine:
         return
-    #draw the line in the mesh
+    
     lineThickness = 2
-    margin = 80
 
     x1, y1, x2, y2 = line
-    largestSize = max(Data.getWidth(), Data.getHeight())
-    scale = (meshWidth - 2 * margin) / largestSize
-    xOffset = (largestSize - Data.getWidth()) / 2
-    yOffset = (largestSize - Data.getHeight()) / 2
-    x1_canvas = (x1 + xOffset) * scale + margin
-    y1_canvas = (y1 + yOffset) * scale + margin
-    x2_canvas = (x2 + xOffset) * scale + margin
-    y2_canvas = (y2 + yOffset) * scale + margin
+    coords1 = globalToMeshCoords(x1, y1)
+    coords2 = globalToMeshCoords(x2, y2)
 
-    coords1 = (x1_canvas, y1_canvas)
-    coords2 = (x2_canvas, y2_canvas)
     meshCanvas.create_line(coords1, coords2, width=lineThickness+0.5, fill='#AAA', smooth=True)
     meshCanvas.create_line(coords1, coords2, width=lineThickness, fill='#000', smooth=True)
 
@@ -673,13 +675,12 @@ def valueInElement(x, y, elementId):
 
 def globalToMeshCoords(x, y):
     from main import Data
-    global meshWidth, meshHeight
+    global meshWidth, meshHeight, Margin
     #convert global coordinates to mesh coordinates
-    margin = 80 
     largestSize = max(Data.getWidth(), Data.getHeight())
-    scale = (meshWidth - 2 * margin) / largestSize
+    scale = (meshWidth - 2 * Margin) / largestSize
     xOffset = (largestSize - Data.getWidth()) / 2
     yOffset = (largestSize - Data.getHeight()) / 2
-    x_canvas = (x + xOffset) * scale + margin
-    y_canvas = (y + yOffset) * scale + margin
+    x_canvas = (x + xOffset) * scale + Margin
+    y_canvas = (y + yOffset) * scale + Margin
     return (x_canvas, y_canvas)

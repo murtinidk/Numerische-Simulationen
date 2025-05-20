@@ -1,6 +1,8 @@
 import numpy as np
 import calculation.gauss as gauss
 
+# This class does only store references to the nodes, and does not contain any data
+# It is used to calculate the elementmatrix and the elementvector
 class Element:
   def __init__(self, id: int):
     from main import Data
@@ -49,7 +51,6 @@ class Element:
     return self.hX * self.hY / 4
   
   def LocHutFx(self, a:int, xi: float) -> float:
-    
     assert a in range(4), "a not in range(4)"
     assert (xi >= -1 and xi <= 1), "xi not in range (-1, 1)"
     if a == 0 or a == 2:
@@ -58,7 +59,6 @@ class Element:
       return (1 + xi) / 2
     
   def LocHutFy(self, a:int, eta: float) -> float:
-    
     assert a in range(4), "a not in range(4)"
     assert (eta >= -1 and eta <= 1), "eta not in range (-1, 1)"
     if a == 0 or a == 1:
@@ -126,7 +126,6 @@ class Element:
     if(edge == 0 or edge == 1):
       vonNeumannBoundary = -vonNeumannBoundary
 
-    
     if(edge == 0 or edge == 3):
       return self.LocHutFx(a=a, xi=location) * \
              vonNeumannBoundary * \

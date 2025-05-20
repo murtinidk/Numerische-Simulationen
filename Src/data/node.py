@@ -4,14 +4,18 @@ class Node:
         self.realX = realX
         self.realY = realY
         self.dirichletBoundary = None
-        # if self.index == 1:
-        #     self.dirichletBoundary = 0
+        #if self.index == 1:
+        #    self.dirichletBoundary = 0
         #if self.index == 8:
-            #self.dirichletBoundary = 2
+        #    self.dirichletBoundary = 2
         self.rightVonNeumannBoundary = None
         self.belowVonNeumannBoundary = None
         # if self.index == 1:
         #     self.belowVonNeumannBoundary = 1
+        if self.realY == 0:
+            self.dirichletBoundary = 0
+        if self.realY == 1:
+            self.dirichletBoundary = 2
         self.result = None
 
     def SetResult(self, result: float):

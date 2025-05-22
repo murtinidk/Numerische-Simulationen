@@ -42,7 +42,7 @@ def meshgen():
         print(flat_indices)
 
     #TODO add boundary conditioins here
-    
+    applyDirichletBoundaryConditions(mesh, width, height)
     
     gui.setStep(gui.simStep.meshTables)
     #IEN
@@ -74,7 +74,8 @@ def meshgen():
     #NE
     nodesWithoutDirichlet = list(filter(lambda x: x.GetDirichletBoundary() == None ,mesh))
     #filter for ones without Dirichlet 
-    eqId = list(range(nodesWithoutDirichlet.__sizeof__()))
+    #eqId = list(range(nodesWithoutDirichlet.__sizeof__())) #sizeof is not the same as len, this is mem size
+    eqId = list(range(len(nodesWithoutDirichlet))) #len instead of sizeof -> mem size <-> num Elements...
     #select their index value
     nodesWithoutDirichlet = list(map(lambda n: n.GetIndex(), nodesWithoutDirichlet))
     NE = dict(zip(nodesWithoutDirichlet, eqId))
@@ -83,3 +84,47 @@ def meshgen():
     #print(f"Mesh generated with width={Data.getWidth()}, height={Data.getHeight()}, xResolution={Data.getXResolution()}, yResolution={Data.getYResolution()}, boundary={Data.getBoundary()}")
     # Function to generate a mesh for the simulation
     # This function will create a mesh based on the specified parameters and return it
+
+def applyDirichletBoundaryConditions(nodes, width, height):
+    # parse dirichlet boundary condition from GUI
+    def getBoundaryData(type_func, value_func) -> tuple[str, float]:
+        boundary_type = type_func()
+        boundary_value_str = value_func()
+        print(boundary_type, boundary_value_str)
+        if boundary_type == 'dirichlet':
+            return boundary_type, float(boundary_value_str)
+        elif boundary_type == 'neumann':
+            raise NotImplementedError("Neumann boundary condition is not implemented yet")
+            #return boundary_type, float(boundary_value_str)
+        else:
+            raise TypeError(f"Unknown boundary type: {boundary_type}")
+    
+    #apply dirichlet boundary conditions to domain
+
+    for node_obj in nodes:
+        coordinates = node_obj.GetCoordinates()
+        if coordinates is None:
+            print(f"Node {node_obj.GetIndex()} has no coordinates")
+            continue
+        x, y = coordinates
+        #left boundary
+        if np.isclose(x, 0.0):
+            btype, value = getBoundaryData(gui.getLeftBoundaryType, gui.getLeftBoundaryValue)
+            if btype == 'dirichlet' and node_obj.GetDirichletBoundary() == None:
+                node_obj.SetDirichletBoundary(value)
+        #right boundary
+        if np.isclose(x, width):
+            btype, value = getBoundaryData(gui.getRightBoundaryType, gui.getRightBoundaryValue)
+            if btype == 'dirichlet' and node_obj.GetDirichletBoundary() == None:
+                node_obj.SetDirichletBoundary(value)
+        #top boundary
+        if np.isclose(y, height):
+            btype, value = getBoundaryData(gui.getTopBoundaryType, gui.getTopBoundaryValue)
+            if btype == 'dirichlet' and node_obj.GetDirichletBoundary() == None:
+                node_obj.SetDirichletBoundary(value)
+        #bottom boundary
+        if np.isclose(y, 0.0):
+            btype, value = getBoundaryData(gui.getBottomBoundaryType, gui.getBottomBoundaryValue)
+            if btype == 'dirichlet' and node_obj.GetDirichletBoundary() == None:
+                node_obj.SetDirichletBoundary(value)
+

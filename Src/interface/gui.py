@@ -149,6 +149,71 @@ def get_yResolution():
         #return default if invalid
         return 10
     
+def getLeftBoundaryType():
+    try:
+        return left_boundary.get()
+    except ValueError:
+        #return default if invalid
+        print("not a valid left boundary input, reverting to default:" + DEFAULTS['leftBoundaryType'])
+        return DEFAULTS['leftBoundaryType']
+
+def getLeftBoundaryValue():
+    try:
+        return float(left_value.get())
+    except ValueError:
+        #return default if invalid
+        print("not a valid left boundary value input, reverting to default:" + DEFAULTS['leftBoundaryValue'])
+        return DEFAULTS['leftBoundaryValue']
+
+def getRightBoundaryType():
+    try:
+        return right_boundary.get()
+    except ValueError:
+        #return default if invalid
+        print("not a valid right boundary input, reverting to default:" + DEFAULTS['rightBoundaryType'])
+        return DEFAULTS['rightBoundaryType']
+
+def getRightBoundaryValue():
+    try:
+        return float(right_value.get())
+    except ValueError:
+        #return default if invalid
+        print("not a valid right boundary value input, reverting to default:" + DEFAULTS['rightBoundaryValue'])
+        return DEFAULTS['rightBoundaryValue']
+
+def getTopBoundaryType():
+    try:
+        return top_boundary.get()
+    except ValueError:
+        #return default if invalid
+        print("not a valid top boundary input, reverting to default:" + DEFAULTS['topBoundaryType'])
+        return DEFAULTS['topBoundaryType']
+
+def getTopBoundaryValue():
+    try:
+        return float(top_value.get())
+    except ValueError:
+        #return default if invalid
+        print("not a valid top boundary value input, reverting to default:" + DEFAULTS['topBoundaryValue'])
+        return DEFAULTS['topBoundaryValue']
+
+def getBottomBoundaryType():
+    try:
+        return bottom_boundary.get()
+    except ValueError:
+        #return default if invalid
+        print("not a valid bottom boundary input, reverting to default:" + DEFAULTS['bottomBoundaryType'])
+        return DEFAULTS['bottomBoundaryType']
+
+def getBottomBoundaryValue():
+    try:
+        return float(bottom_value.get())
+    except ValueError:
+        #return default if invalid
+        print("not a valid bottom boundary value input, reverting to default:" + DEFAULTS['bottomBoundaryValue'])
+        return DEFAULTS['bottomBoundaryValue']
+
+
 def get_line():
     x = int(width.get())
     y = int(height.get())

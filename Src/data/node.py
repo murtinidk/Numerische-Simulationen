@@ -35,8 +35,9 @@ class Node:
 
     def SetDirichletBoundary(self, Boundary: float):
         assert self.dirichletBoundary is None, "Can't set dirichlet: already set"
-        assert self.vonNeumannBoundary is None, "Can't set dirichlet: vonNeumann is already set"
-        self.gaussBoundary = Boundary
+        #assert self.vonNeumannBoundary is None, "Can't set dirichlet: vonNeumann is already set"
+        #node has no vonNeumannBoundary attribute
+        self.dirichletBoundary = Boundary
 
     def GetDirichletBoundary(self):
         return self.dirichletBoundary

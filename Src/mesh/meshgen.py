@@ -90,12 +90,14 @@ def applyDirichletBoundaryConditions(nodes, width, height):
     def getBoundaryData(type_func, value_func) -> tuple[str, float]:
         boundary_type = type_func()
         boundary_value_str = value_func()
-        print(boundary_type, boundary_value_str)
+        #print(boundary_type, boundary_value_str)
         if boundary_type == 'dirichlet':
             return boundary_type, float(boundary_value_str)
         elif boundary_type == 'neumann':
             raise NotImplementedError("Neumann boundary condition is not implemented yet")
             #return boundary_type, float(boundary_value_str)
+        elif boundary_type == 'none':
+            return boundary_type, None
         else:
             raise TypeError(f"Unknown boundary type: {boundary_type}")
     
@@ -104,8 +106,7 @@ def applyDirichletBoundaryConditions(nodes, width, height):
     for node_obj in nodes:
         coordinates = node_obj.GetCoordinates()
         if coordinates is None:
-            print(f"Node {node_obj.GetIndex()} has no coordinates")
-            continue
+            raise ValueError("no node coords")
         x, y = coordinates
         #left boundary
         if np.isclose(x, 0.0):

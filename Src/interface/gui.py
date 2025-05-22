@@ -34,6 +34,9 @@ DEFAULTS = {
     'drawMesh': '1'
 }
 
+BOUNDARY_TYPE_OPTIONS = ["dirichlet", "neumann", "none"]
+
+
 class debugOptions(Enum):
     drawID = 1
     drawEQ = 2
@@ -306,14 +309,14 @@ def create():
     top_value.insert(0,settings['topBoundaryValue']) #insert from loaded or default settings
     top_value.grid(row=0, column=1)
     top_boundary = StringVar(root, settings['topBoundaryType'])
-    OptionMenu(boundary_frame, top_boundary, "dirichlet", "neumann").grid(row=1, column=1)
+    OptionMenu(boundary_frame, top_boundary, *BOUNDARY_TYPE_OPTIONS).grid(row=1, column=1)
     #Right
     Label(boundary_frame, text="Right:").grid(row=0, column=2)
     right_value = Entry(boundary_frame, width=bfieldwidth)
     right_value.insert(0, settings['rightBoundaryValue'])
     right_value.grid(row=0, column=3)
     right_boundary = StringVar(root, settings['rightBoundaryType'])
-    OptionMenu(boundary_frame, right_boundary, "dirichlet", "neumann").grid(row=1, column=3)
+    OptionMenu(boundary_frame, right_boundary, *BOUNDARY_TYPE_OPTIONS).grid(row=1, column=3)
     
     #bottom
     Label(boundary_frame, text="Bottom:").grid(row=0, column=4)
@@ -321,7 +324,7 @@ def create():
     bottom_value.insert(0, settings['bottomBoundaryValue'])
     bottom_value.grid(row=0, column=5)
     bottom_boundary = StringVar(root, settings['bottomBoundaryType'])
-    OptionMenu(boundary_frame, bottom_boundary, "dirichlet", "neumann").grid(row=1, column=5)
+    OptionMenu(boundary_frame, bottom_boundary, *BOUNDARY_TYPE_OPTIONS).grid(row=1, column=5)
     
     #left
     Label(boundary_frame, text="Left:").grid(row=0, column=6)
@@ -329,7 +332,7 @@ def create():
     left_value.insert(0, settings['leftBoundaryValue'])
     left_value.grid(row=0, column=7)
     left_boundary = StringVar(root, settings['leftBoundaryType'])
-    OptionMenu(boundary_frame, left_boundary, "dirichlet", "neumann").grid(row=1, column=7)
+    OptionMenu(boundary_frame, left_boundary, *BOUNDARY_TYPE_OPTIONS).grid(row=1, column=7)
     
     # boundary_conditions_str = StringVar(root)
     # boundary_conditions_str.set(settings['boundary'])
@@ -663,6 +666,8 @@ def drawColor():
                 if valueRange == 0:
                     valueRange = 1
                 hottness = (value - minValue) / valueRange #should be from 0 to 1
+                # sometimes it is not. clamp it
+                hottness = max(0, min(1, hottness))
                 r = int(hottness * 192) + 63
                 g = 63
                 b = int((1 - hottness) * 192) + 63

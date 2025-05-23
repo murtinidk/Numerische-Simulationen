@@ -4,7 +4,8 @@
 #- Gruppe 6: Ram Abhay, Figo Tobias, Thalmayr Martin
 
 import interface.gui
-
+import external.exportRes as CFSwriter
+import numpy as np
 class DataClass:
     def __init__(self):
         self.hasSize = False
@@ -158,3 +159,56 @@ class DataClass:
 
     def getHasResult(self) -> bool:
         return self.hasResult
+    
+    #translates data for h5 export writer, as in interface description for the writer
+    # writer.writeResuls writes into workingdir/result.cfs
+    def exportCFS(self):
+        nodesPerEl = self.getNen()
+        nElements = self.getNe()
+        mesh = self.getMesh()
+        nNodes = len(mesh)
+        dim = 2 #only 2D xy domains
+        n_dof_p_node = 1 #only one degree of freedom per node -> scalar value per node
+        if self.getHasResult() == False:
+            raise Exception("No result to export!")
+        #reult vector
+        U = np.zeros((nNodes,))
+        for i in range(len(mesh)):
+            #get the result from node if dirichlet is not set
+            if mesh[i].GetDirichletBoundary() == None:
+                U[i] = mesh[i].GetResult()
+            else:
+                U[i] = mesh[i].GetDirichletBoundary()
+        
+        #geom: node coordinate matrix
+        geom = np.zeros((nNodes,2))
+        for i, node in enumerate(mesh):
+            geom[i][0] = node.GetX()
+            geom[i][1] = node.GetY()
+
+        #connec plot - node connectivity matrix
+        connec_plot = np.zeros((nElements, nodesPerEl),dtype=int)
+        for element in range(nElements):
+            #remap element connectivity
+            connec_plot[element, 0] = self.getIENof(2, element) 
+            connec_plot[element, 1] = self.getIENof(3, element)
+            connec_plot[element, 2] = self.getIENof(0, element)
+            connec_plot[element, 3] = self.getIENof(1, element)
+        print(connec_plot)
+        print(U)
+        print(self.getElementMatrixMap())
+        #create instance of writer class
+        writer = CFSwriter.EXPORT(
+                nodesPerEl=nodesPerEl,
+                nElements=nElements,
+                nNodes=nNodes,
+                dim=dim,
+                U=U,
+                geom=geom,
+                connec_plot=connec_plot,
+                n_dof_p_node=n_dof_p_node
+        )
+        #write results to file
+        writer.writeResults()
+
+

@@ -31,7 +31,16 @@ DEFAULTS = {
     'bottomBoundaryValue': '0',
     'leftBoundaryValue': '0',
     
-    'drawMesh': '1'
+    #debug options
+    'options_renderAnything': '1',
+    'options_drawID': '0',
+    'options_drawEQ': '0',
+    'options_drawEN': '0',
+    'options_drawLines': '0',
+    'options_drawNodes': '0',
+    'options_drawValues': '1',
+    'options_writeValues': '0',
+    'options_drawOnFinish': '0'
 }
 
 BOUNDARY_TYPE_OPTIONS = ["dirichlet", "neumann", "none"]
@@ -45,6 +54,7 @@ LIBRARY = {
 
 
 class debugOptions(Enum):
+    renderAnything = 0
     drawID = 1
     drawEQ = 2
     drawEN = 3
@@ -52,15 +62,18 @@ class debugOptions(Enum):
     drawNodes = 5
     drawValues = 6
     writeValues = 7
+    drawOnFinish = 8
 
 debugSettings = {
-    debugOptions.drawID : True,
-    debugOptions.drawEQ : True,
-    debugOptions.drawEN : True,
-    debugOptions.drawLines : True,
-    debugOptions.drawNodes : True,
-    debugOptions.drawValues : True,
-    debugOptions.writeValues : True
+    debugOptions.renderAnything : 1,
+    debugOptions.drawID : 1,
+    debugOptions.drawEQ : 1,
+    debugOptions.drawEN : 1,
+    debugOptions.drawLines : 1,
+    debugOptions.drawNodes : 1,
+    debugOptions.drawValues : 1,
+    debugOptions.writeValues : 1,
+    debugOptions.drawOnFinish : 1
 }
 
 width = None
@@ -128,17 +141,13 @@ def get_width():
     try:
         return int(width.get())
     except ValueError:
-        #return default if invalid
-        print("not a valid width input, reverting to default value 10")
-        return 10
+        raise Exception("Width input not valid")
 
 def get_height():
     try:
         return int(height.get())
     except ValueError:
-        #return default if invalid
-        print("not a valid height input, reverting to default value 10")
-        return 10
+        raise Exception("Height input not valid")
         
 def get_boundary_condition():
     return boundary_conditions_str.get()
@@ -148,80 +157,62 @@ def get_xResolution():
     try:
         return int(xResolution.get())
     except ValueError:
-        #return default if invalid
-        return 10
+        raise Exception("Width Resolution input not valid")
 
 def get_yResolution():
     assert(int(yResolution.get()) > 1)
     try:
         return int(yResolution.get())
     except ValueError:
-        #return default if invalid
-        return 10
+        raise Exception("Height Resolution input not valid")
     
 def getLeftBoundaryType():
     try:
         return left_boundary.get()
     except ValueError:
-        #return default if invalid
-        print("not a valid left boundary input, reverting to default:" + DEFAULTS['leftBoundaryType'])
-        return DEFAULTS['leftBoundaryType']
+        raise Exception("LeftboundaryType not a valid boundary input")
 
 def getLeftBoundaryValue():
     try:
         return float(left_value.get())
     except ValueError:
-        #return default if invalid
-        print("not a valid left boundary value input, reverting to default:" + DEFAULTS['leftBoundaryValue'])
-        return DEFAULTS['leftBoundaryValue']
+        raise Exception("Leftboundary not a valid boundary value input")
 
 def getRightBoundaryType():
     try:
         return right_boundary.get()
     except ValueError:
-        #return default if invalid
-        print("not a valid right boundary input, reverting to default:" + DEFAULTS['rightBoundaryType'])
-        return DEFAULTS['rightBoundaryType']
+        raise Exception("RightboundaryType not a valid boundary input")
 
 def getRightBoundaryValue():
     try:
         return float(right_value.get())
     except ValueError:
-        #return default if invalid
-        print("not a valid right boundary value input, reverting to default:" + DEFAULTS['rightBoundaryValue'])
-        return DEFAULTS['rightBoundaryValue']
+        raise Exception("Rightboundary not a valid boundary value input")
 
 def getTopBoundaryType():
     try:
         return top_boundary.get()
     except ValueError:
-        #return default if invalid
-        print("not a valid top boundary input, reverting to default:" + DEFAULTS['topBoundaryType'])
-        return DEFAULTS['topBoundaryType']
+        raise Exception("TopboundaryType not a valid boundary input")
 
 def getTopBoundaryValue():
     try:
         return float(top_value.get())
     except ValueError:
-        #return default if invalid
-        print("not a valid top boundary value input, reverting to default:" + DEFAULTS['topBoundaryValue'])
-        return DEFAULTS['topBoundaryValue']
+        raise Exception("Topboundary not a valid boundary value input")
 
 def getBottomBoundaryType():
     try:
         return bottom_boundary.get()
     except ValueError:
-        #return default if invalid
-        print("not a valid bottom boundary input, reverting to default:" + DEFAULTS['bottomBoundaryType'])
-        return DEFAULTS['bottomBoundaryType']
+        raise Exception("BottomboundaryType not a valid boundary input")
 
 def getBottomBoundaryValue():
     try:
         return float(bottom_value.get())
     except ValueError:
-        #return default if invalid
-        print("not a valid bottom boundary value input, reverting to default:" + DEFAULTS['bottomBoundaryValue'])
-        return DEFAULTS['bottomBoundaryValue']
+        raise Exception("Bottomboundary not a valid boundary value input")
 
 def createFunktion(string: str):
     def func(x):
@@ -256,7 +247,7 @@ def get_line():
     return np.array([x1,y1,x2,y2, value])
     
 def create():
-    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas, drawMesh , config_path, step_text
+    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas , config_path, step_text, root
     global X1, Y1, X2, Y2, line_frame, line_value, line_type
     global top_value, top_boundary, right_value, right_boundary, bottom_boundary, bottom_value, left_boundary, left_value
     #default config path
@@ -267,6 +258,9 @@ def create():
     #try load settings from file
     #if not found, use default values
     settings = load_settings()
+    #transfer debugoptions from settings to debugSettings
+    for key in debugSettings.keys():
+        debugSettings[key] = int(settings[f'options_{key.name}'])
 
     #main window
     root = Tk()
@@ -277,9 +271,9 @@ def create():
     root.tk_setPalette( "#FFFFFF" ) #fix linux color issues
 
     #CONFIG FILE PICKER 
-    Label(root, text="Config File:").grid(row=6, column=2, sticky=E)
+    #Label(root, text="Config File:").grid(row=6, column=2, sticky=E)
     config_label = Label(root, text=config_path, anchor=W)
-    config_label.grid(row=6, column=3, columnspan=3, sticky=W+E)
+    config_label.grid(row=5, column=3, columnspan=3, sticky=W+E)
     
     def choose_setting_file():
         global config_path
@@ -295,7 +289,7 @@ def create():
             # vals = load_settings(config_path)
             
     #this button is only for selecting the path, loading and saving from path is per own button
-    Button(root, text="Choose Config File", command=choose_setting_file).grid(row=6, column=2)
+    Button(root, text="Choose Config File", command=choose_setting_file).grid(row=5, column=2)
 
     #create input for mesh width and height
     Label(root, text="Width:").grid(row=0, column=0)
@@ -384,20 +378,26 @@ def create():
     line_value = Entry(line_frame, width=lfieldwidth)
     line_value.grid(row=0, column=9)
     
-    drawMesh = IntVar(value=int(settings['drawMesh']))
-    Label(root, text="draw Mesh:").grid(row=2, column=2)
-    drawMeshButton = Checkbutton(root, variable=drawMesh)
-    drawMeshButton.select()
-    drawMeshButton.grid(row=2, column=3)
+    
+    renderingOptions_frame = Frame(root)
+    renderingOptions_frame.grid(row=0, column=8, rowspan=8, columnspan=1)
+
+    for i, option in enumerate(debugSettings.keys()):
+        Label(renderingOptions_frame, text=option.name).grid(row=i, column=0)
+        debugSettings[option] = IntVar(value=int(debugSettings[option]))
+        debugButton = Checkbutton(renderingOptions_frame, variable=debugSettings[option], command=updateGui)
+        debugButton.grid(row=i, column=1)
 
     #start button
     #from main import main_simulation 
     #start_button = Button(root, text="Start", command=main_simulation)
-    start_button = Button(root, text="Start", command=lambda: __import__('main').main_simulation())
-    start_button.grid(row=16, column=0, columnspan=1)
     
-    step_text = Label(root, text="Sim Step: None")
-    step_text.grid(row=16, column=1, columnspan=1)
+    start_frame = Frame(root)
+    start_frame.grid(row=16, column=1, rowspan=1, columnspan=1)
+    start_button = Button(start_frame, text="Start", command=lambda: __import__('main').main_simulation())
+    start_button.grid(row=0, column=0, columnspan=1)
+    step_text = Label(start_frame, text="Sim Step: None")
+    step_text.grid(row=0, column=1, columnspan=1)
     setStep(simStep.none)
     
     #load settings button
@@ -417,8 +417,16 @@ def create():
         right_value.delete(0, END); right_value.insert(0, vals['rightBoundaryValue'])
         bottom_value.delete(0, END); bottom_value.insert(0, vals['bottomBoundaryValue'])
         left_value.delete(0, END); left_value.insert(0, vals['leftBoundaryValue'])
-        drawMesh.set(int(vals['drawMesh']))
-
+        debugSettings[debugOptions.renderAnything].set(int(vals['options_renderAnything']))
+        debugSettings[debugOptions.drawID].set(int(vals['options_drawID']))
+        debugSettings[debugOptions.drawEQ].set(int(vals['options_drawEQ']))
+        debugSettings[debugOptions.drawEN].set(int(vals['options_drawEN']))
+        debugSettings[debugOptions.drawLines].set(int(vals['options_drawLines']))
+        debugSettings[debugOptions.drawNodes].set(int(vals['options_drawNodes']))
+        debugSettings[debugOptions.drawValues].set(int(vals['options_drawValues']))
+        debugSettings[debugOptions.writeValues].set(int(vals['options_writeValues']))
+        debugSettings[debugOptions.drawOnFinish].set(int(vals['options_drawOnFinish']))
+        
     #save settings button
     def save_setting_button():
         vals = {
@@ -435,12 +443,20 @@ def create():
             'rightBoundaryValue': right_value.get(),
             'bottomBoundaryValue': bottom_value.get(),
             'leftBoundaryValue': left_value.get(),
-            'drawMesh': str(drawMesh.get())
+            'options_renderAnything': str(debugSettings[debugOptions.renderAnything].get()),
+            'options_drawID': str(debugSettings[debugOptions.drawID].get()),
+            'options_drawEQ': str(debugSettings[debugOptions.drawEQ].get()),
+            'options_drawEN': str(debugSettings[debugOptions.drawEN].get()),
+            'options_drawLines': str(debugSettings[debugOptions.drawLines].get()),
+            'options_drawNodes': str(debugSettings[debugOptions.drawNodes].get()),
+            'options_drawValues': str(debugSettings[debugOptions.drawValues].get()),
+            'options_writeValues': str(debugSettings[debugOptions.writeValues].get()),
+            'options_drawOnFinish': str(debugSettings[debugOptions.drawOnFinish].get()),
         }
         save_settings(vals, config_path)
 
-    Button(root, text="Load Settings", command=load_settings_button).grid(row=7, column=2)
-    Button(root, text="Save Settings", command=save_setting_button).grid(row=8, column=2)
+    Button(root, text="Load Settings", command=load_settings_button).grid(row=6, column=2)
+    Button(root, text="Save Settings", command=save_setting_button).grid(row=7, column=2)
 
     #program data loading/saving    
     def save_data_button(file_path):
@@ -458,13 +474,13 @@ def create():
         with open(file_path, 'wb') as file:
             from main import Data
             pickle.dump(Data, file)
-        print(f"Data saved to {file_path}")
+
     #save data button, asks for file name with picker for pickle
     Button(root, text="Save Data", command=lambda: save_data_button(filedialog.asksaveasfilename(
         title="Save data as",
         defaultextension=".pkl",
         filetypes=[("Pickle files", "*.pkl"), ("All files", "*")]
-    ))).grid(row=7, column=3)
+    ))).grid(row=6, column=3)
 
     #load data button, asks for file name with picker for pickle
     def load_data_button(file_path):
@@ -486,11 +502,39 @@ def create():
     Button(root, text="Load Data", command=lambda: load_data_button(filedialog.askopenfilename(
         title="Load data",
         filetypes=[("Pickle files", "*.pkl"), ("All files", "*")]
-    ))).grid(row=8, column=3)
+    ))).grid(row=7, column=3)
     
+    #CFS export button 
+    def export_cfs_button():
+        from main import Data
+        #check if there are results to export
+        if Data.getHasResult() == False:
+            messagebox.showwarning("No results", "No results to export")
+            return
+        #check if there is already a results.cfs
+        if os.path.exists("results.cfs"):
+            #ask for overwrite
+            if messagebox.askyesno("Overwrite", "results.cfs already exists. Overwrite?"):
+                #deete old file
+                try:
+                    os.remove("results.cfs")
+                except Exception as e:
+                    messagebox.showerror("Delete Error", f"Failed to delete old results.cfs:\n{e}")
+                    return
+                #write new file
+                Data.exportCFS()
+                messagebox.showinfo("Export CFS", "CFS file exported to results.cfs")
+            else:
+                return
+        
+    cfs_button = Button(root, text="Export CFS", command=export_cfs_button)
+    cfs_button.grid(row=16, column=3)
+
     #canvas pannable / zoomable
     meshCanvas = PanableCanvas(root, width=meshWidth, height=meshHeight, bg="lightgrey")
-    meshCanvas.grid(row=30, column=1, columnspan=2)
+    meshCanvas.grid(row=30, column=0, columnspan=21, sticky=N+S+E+W, padx=5, pady=5)
+    root.grid_rowconfigure(30, weight=1)
+    root.grid_columnconfigure(20, weight=1)
 
     #tkinter loop
     root.mainloop()
@@ -510,22 +554,25 @@ def closeGui():
 
 def updateGui():
     from main import Data
-    global width, height, boundary_conditions_str, meshCanvas
+    global width, height, boundary_conditions_str, meshCanvas, root
+    if(debugSettings[debugOptions.drawOnFinish].get() and not Data.getHasResult()):
+        return
+    root.update()
     if Data.hasMesh:
         #update the mesh in the gui
         meshCanvas.delete("all")
-        if(drawMesh.get()):
-            if(debugSettings[debugOptions.drawValues] and Data.getHasResult()):
+        if(debugSettings[debugOptions.renderAnything].get()):
+            if(debugSettings[debugOptions.drawValues].get() and Data.getHasResult()):
                 drawColor()
             mesh = Data.getMesh()
             drawArrow()
             drawLine(Data.getLine())
             
-            if((debugSettings[debugOptions.drawNodes]) or (not debugSettings[debugOptions.drawID]) or (debugSettings[debugOptions.drawEQ])):
+            if((debugSettings[debugOptions.drawNodes].get()) or (not debugSettings[debugOptions.drawID].get()) or (debugSettings[debugOptions.drawEQ].get())):
                 for node in mesh:
                     drawNode(node)
                 
-            if(debugSettings[debugOptions.drawLines]):
+            if(debugSettings[debugOptions.drawLines].get()):
                 for elementId in range((Data.getXResolution()-1) * (Data.getYResolution()-1)):
                     drawElement(elementId)
 
@@ -592,13 +639,13 @@ def drawNode(node):
     x, y = node.GetCoordinates()
     x, y = globalToMeshCoords(x, y)
     
-    if(debugSettings[debugOptions.drawNodes]):
+    if(debugSettings[debugOptions.drawNodes].get()):
         meshCanvas.create_oval(x-nodeRadius, y-nodeRadius, x+nodeRadius, y+nodeRadius, fill="black")
 
-    if(debugSettings[debugOptions.drawID]):
+    if(debugSettings[debugOptions.drawID].get()):
         meshCanvas.create_text(x + nodeRadius, y - nodeRadius, text= "id:" + str(node.GetIndex()), fill="black", font="Arial 8", anchor=SW)
 
-    if(debugSettings[debugOptions.drawEQ]):
+    if(debugSettings[debugOptions.drawEQ].get()):
         EQid = None
         try:
             EQid = "EQid:" + str(Data.getNEof( node.GetIndex()))
@@ -607,7 +654,7 @@ def drawNode(node):
         finally:
             meshCanvas.create_text(x - nodeRadius, y + nodeRadius, text= EQid, fill="black", font="Arial 8", anchor=NE, width=70)
     
-    if(debugSettings[debugOptions.drawEN]):
+    if(debugSettings[debugOptions.drawEN].get()):
         EN = None
         try:
             #Get dict entries where this node is the result
@@ -619,7 +666,7 @@ def drawNode(node):
         finally:
             meshCanvas.create_text(x - nodeRadius, y - nodeRadius, text= EN, fill="black", font="Arial 8", anchor=SE, width=90)
 
-    if(debugSettings[debugOptions.writeValues]):
+    if(debugSettings[debugOptions.writeValues].get()):
         if(not node.GetResult() is None):
             text = "Result:" + f"{node.GetResult():.3f}"
         elif(not node.GetDirichletBoundary() is None):
@@ -684,11 +731,15 @@ def drawColor():
                 x1, y1 = globalToMeshCoords(xborder[i], yborder[j])
                 x2, y2 = globalToMeshCoords(xborder[i+1], yborder[j+1])
                 value = valueInElement(xprobe[i], yprobe[j], e)
+                #make sure not every value is the same, which would draw random grainy colors
                 if valueRange == 0:
                     valueRange = 1
+                #also check for small rounding errors
+                if valueRange < maxValue / 100000:
+                    valueRange = maxValue / 100000
                 hottness = (value - minValue) / valueRange #should be from 0 to 1
                 # sometimes it is not. clamp it
-                hottness = max(0, min(1, hottness))
+                #hottness = max(0, min(1, hottness))
                 r = int(hottness * 192) + 63
                 g = 63
                 b = int((1 - hottness) * 192) + 63
@@ -726,12 +777,19 @@ def valueInElement(x, y, elementId):
 
 def globalToMeshCoords(x, y):
     from main import Data
-    global meshWidth, meshHeight, Margin
+    global meshWidth, meshHeight, Margin, meshCanvas, root
     #convert global coordinates to mesh coordinates
+    canvasWidth = meshCanvas.winfo_width()
+    canvasHeight = meshCanvas.winfo_height()
+    smallestCanvasSize = min(canvasWidth, canvasHeight)
+    largestCanvasSize = max(canvasWidth, canvasHeight)
+
     largestSize = max(Data.getWidth(), Data.getHeight())
-    scale = (meshWidth - 2 * Margin) / largestSize
+    scale = (smallestCanvasSize - 2 * Margin) / largestSize
     xOffset = (largestSize - Data.getWidth()) / 2
     yOffset = (largestSize - Data.getHeight()) / 2
-    x_canvas = (x + xOffset) * scale + Margin
-    y_canvas = (y + yOffset) * scale + Margin
+    xCanvasOffset = (largestCanvasSize - canvasHeight) / 2
+    yCanvasOffset = (largestCanvasSize - canvasWidth) / 2
+    x_canvas = (x + xOffset) * scale + Margin + xCanvasOffset
+    y_canvas = (y + yOffset) * scale + Margin + yCanvasOffset
     return (x_canvas, y_canvas)

@@ -66,7 +66,23 @@ def meshgen():
         
 
     #TODO add boundary conditioins here
-    applyDirichletBoundaryConditions(mesh, width, height)
+    def createBoundaryArray(getType, length, floatValue):
+        if getType == "neumann":
+            raise Exception("Neumann boundary conditions not implemented yet")
+        if getType == "none" or floatValue == None:
+            return np.full(length, None)
+        else:
+            if (type(floatValue) == int or type(floatValue) == float) and getType == "dirichlet":
+                return np.full(length, floatValue)
+            else:
+                raise Exception(floatValue + "is not a number")
+
+    applyDirichletBoundaryConditions(mesh, width, height,xResolution, yResolution, {
+        "top":    createBoundaryArray(gui.getTopBoundaryType(), xResolution, gui.getTopBoundaryValue()),
+        "bottom": createBoundaryArray(gui.getBottomBoundaryType(), xResolution, gui.getBottomBoundaryValue()),
+        "left":   createBoundaryArray(gui.getLeftBoundaryType(), yResolution, gui.getLeftBoundaryValue()),
+        "right":  createBoundaryArray(gui.getRightBoundaryType(), yResolution, gui.getRightBoundaryValue())
+    })
     
     gui.setStep(gui.simStep.meshTables)
     #IEN
@@ -109,49 +125,76 @@ def meshgen():
     # Function to generate a mesh for the simulation
     # This function will create a mesh based on the specified parameters and return it
 
-def applyDirichletBoundaryConditions(nodes, width, height):
-    # parse dirichlet boundary condition from GUI
-    def getBoundaryData(type_func, value_func) -> tuple[str, float]:
-        boundary_type = type_func()
-        boundary_value_str = value_func()
-        #print(boundary_type, boundary_value_str)
-        if boundary_type == 'dirichlet':
-            return boundary_type, float(boundary_value_str)
-        elif boundary_type == 'neumann':
-            raise NotImplementedError("Neumann boundary condition is not implemented yet")
-            #return boundary_type, float(boundary_value_str)
-        elif boundary_type == 'none':
-            return boundary_type, None
-        else:
-            raise TypeError(f"Unknown boundary type: {boundary_type}")
+def applyDirichletBoundaryConditions(nodes, width, height, xres, yres, dirichlet_arrays):
+    if dirichlet_arrays is None or len(dirichlet_arrays) != 4:
+        raise Exception("dirichlet arrays not correctly initialized")
     
-    #apply dirichlet boundary conditions to domain
-
-    for node_obj in nodes:
-        coordinates = node_obj.GetCoordinates()
-        if coordinates is None:
-            raise ValueError("no node coords")
-        x, y = coordinates
-        #left boundary
-        if np.isclose(x, 0.0):
-            btype, value = getBoundaryData(gui.getLeftBoundaryType, gui.getLeftBoundaryValue)
-            if btype == 'dirichlet' and node_obj.GetDirichletBoundary() == None:
-                node_obj.SetDirichletBoundary(value)
-        #right boundary
-        if np.isclose(x, width):
-            btype, value = getBoundaryData(gui.getRightBoundaryType, gui.getRightBoundaryValue)
-            if btype == 'dirichlet' and node_obj.GetDirichletBoundary() == None:
-                node_obj.SetDirichletBoundary(value)
-        #top boundary
-        if np.isclose(y, height):
-            btype, value = getBoundaryData(gui.getTopBoundaryType, gui.getTopBoundaryValue)
-            if btype == 'dirichlet' and node_obj.GetDirichletBoundary() == None:
-                node_obj.SetDirichletBoundary(value)
-        #bottom boundary
-        if np.isclose(y, 0.0):
-            btype, value = getBoundaryData(gui.getBottomBoundaryType, gui.getBottomBoundaryValue)
-            if btype == 'dirichlet' and node_obj.GetDirichletBoundary() == None:
-                node_obj.SetDirichletBoundary(value)
+    #calculate the corner node ids
+    TL = 0
+    TR = xres-1
+    BL = len(nodes)-xres
+    BR = len(nodes)-1
+    
+    #calculate the edge node ids excluding corners
+    idx_top = np.arange(TL+1, TR)
+    idx_bottom = np.arange(BL+1, BR)
+    idx_left = np.arange(TL+xres, BL, xres)
+    idx_right = np.arange(TR+xres, BR, xres)
+    
+    #location : type, value array without corners, node ids without corners
+    edges = {
+        "top":    (gui.getTopBoundaryType(), dirichlet_arrays["top"],idx_top),
+        "bottom": (gui.getBottomBoundaryType(), dirichlet_arrays["bottom"],idx_bottom),
+        "left":   (gui.getLeftBoundaryType(), dirichlet_arrays["left"],idx_left),
+        "right":  (gui.getRightBoundaryType(), dirichlet_arrays["right"],idx_right)
+    }
+    #print(edges)
+    
+    #check array lengths
+    for edge in edges:
+        edge_type, dirichlet_array, idx = edges[edge]
+        if len(idx)+2 != len(dirichlet_array):
+            raise Exception(edge + "edge array not of correct length")
+    
+    
+    #apply edge values
+    for edge in edges:
+        edge_type, dirichlet_array, idx = edges[edge]
+        if edge_type == "dirichlet":
+            #apply dirichlet values
+            for i, node_id in enumerate(idx):
+                #+1 to skip first value in the array -> corner value
+                if dirichlet_array[i+1] is not None:
+                    nodes[node_id].SetDirichletBoundary(dirichlet_array[i+1])
+              
+    #apply corner values
+    #check corner intersection -> avg val of neighboring nodes
+    corners_values = {
+        "TL": (TL,  dirichlet_arrays["top"][0], dirichlet_arrays["left"][0]),
+        "TR": (TR,  dirichlet_arrays["top"][-1], dirichlet_arrays["right"][0]),
+        "BL": (BL,  dirichlet_arrays["bottom"][0], dirichlet_arrays["left"][-1]),
+        "BR": (BR,  dirichlet_arrays["bottom"][-1], dirichlet_arrays["right"][-1])
+    }
+    corners_neighbors_values = {
+        "TL": (nodes[TL+1].GetDirichletBoundary(), nodes[TL+xres].GetDirichletBoundary()),
+        "TR": (nodes[TR-1].GetDirichletBoundary(), nodes[TR+xres].GetDirichletBoundary()),
+        "BL": (nodes[BL+1].GetDirichletBoundary(), nodes[BL-xres].GetDirichletBoundary()),
+        "BR": (nodes[BR-1].GetDirichletBoundary(), nodes[BR-xres].GetDirichletBoundary())
+    }
+    #print(corners_values)
+    #print(corners_neighbors_values)
+    for corner in corners_values:
+        idx, valA, valB = corners_values[corner]
+        neighborA, neighborB = corners_neighbors_values[corner]
+        #average: both neighbors are set, two corner values are set
+        if neighborA != None and neighborB != None and valA != None and valB != None:
+            nodes[idx].SetDirichletBoundary((neighborA + neighborB) / 2)
+        elif valA != None and valB == None:
+            nodes[idx].SetDirichletBoundary(valA)
+        elif valA == None and valB != None:
+            nodes[idx].SetDirichletBoundary(valB)
+        
+    
 
 def removeEdgeNodes(nodes):
     xmin = 0

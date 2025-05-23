@@ -40,6 +40,7 @@ DEFAULTS = {
     'options_drawNodes': '0',
     'options_drawValues': '1',
     'options_writeValues': '0',
+    'options_drawOnFinish': '0'
 }
 
 BOUNDARY_TYPE_OPTIONS = ["dirichlet", "neumann", "none"]
@@ -54,6 +55,7 @@ class debugOptions(Enum):
     drawNodes = 5
     drawValues = 6
     writeValues = 7
+    drawOnFinish = 8
 
 debugSettings = {
     debugOptions.renderAnything : 1,
@@ -63,7 +65,8 @@ debugSettings = {
     debugOptions.drawLines : 1,
     debugOptions.drawNodes : 1,
     debugOptions.drawValues : 1,
-    debugOptions.writeValues : 1
+    debugOptions.writeValues : 1,
+    debugOptions.drawOnFinish : 1
 }
 
 width = None
@@ -245,9 +248,9 @@ def create():
     root.tk_setPalette( "#FFFFFF" ) #fix linux color issues
 
     #CONFIG FILE PICKER 
-    Label(root, text="Config File:").grid(row=6, column=2, sticky=E)
+    #Label(root, text="Config File:").grid(row=6, column=2, sticky=E)
     config_label = Label(root, text=config_path, anchor=W)
-    config_label.grid(row=6, column=3, columnspan=3, sticky=W+E)
+    config_label.grid(row=5, column=3, columnspan=3, sticky=W+E)
     
     def choose_setting_file():
         global config_path
@@ -263,7 +266,7 @@ def create():
             # vals = load_settings(config_path)
             
     #this button is only for selecting the path, loading and saving from path is per own button
-    Button(root, text="Choose Config File", command=choose_setting_file).grid(row=6, column=2)
+    Button(root, text="Choose Config File", command=choose_setting_file).grid(row=5, column=2)
 
     #create input for mesh width and height
     Label(root, text="Width:").grid(row=0, column=0)
@@ -401,6 +404,7 @@ def create():
         debugSettings[debugOptions.drawNodes].set(int(vals['options_drawNodes']))
         debugSettings[debugOptions.drawValues].set(int(vals['options_drawValues']))
         debugSettings[debugOptions.writeValues].set(int(vals['options_writeValues']))
+        debugSettings[debugOptions.drawOnFinish].set(int(vals['options_drawOnFinish']))
         
     #save settings button
     def save_setting_button():
@@ -425,12 +429,13 @@ def create():
             'options_drawLines': str(debugSettings[debugOptions.drawLines].get()),
             'options_drawNodes': str(debugSettings[debugOptions.drawNodes].get()),
             'options_drawValues': str(debugSettings[debugOptions.drawValues].get()),
-            'options_writeValues': str(debugSettings[debugOptions.writeValues].get())
+            'options_writeValues': str(debugSettings[debugOptions.writeValues].get()),
+            'options_drawOnFinish': str(debugSettings[debugOptions.drawOnFinish].get()),
         }
         save_settings(vals, config_path)
 
-    Button(root, text="Load Settings", command=load_settings_button).grid(row=7, column=2)
-    Button(root, text="Save Settings", command=save_setting_button).grid(row=8, column=2)
+    Button(root, text="Load Settings", command=load_settings_button).grid(row=6, column=2)
+    Button(root, text="Save Settings", command=save_setting_button).grid(row=7, column=2)
 
     #program data loading/saving    
     def save_data_button(file_path):
@@ -454,7 +459,7 @@ def create():
         title="Save data as",
         defaultextension=".pkl",
         filetypes=[("Pickle files", "*.pkl"), ("All files", "*")]
-    ))).grid(row=7, column=3)
+    ))).grid(row=6, column=3)
 
     #load data button, asks for file name with picker for pickle
     def load_data_button(file_path):
@@ -476,7 +481,7 @@ def create():
     Button(root, text="Load Data", command=lambda: load_data_button(filedialog.askopenfilename(
         title="Load data",
         filetypes=[("Pickle files", "*.pkl"), ("All files", "*")]
-    ))).grid(row=8, column=3)
+    ))).grid(row=7, column=3)
     
     #CFS export button 
     def export_cfs_button():
@@ -502,7 +507,7 @@ def create():
                 return
         
     cfs_button = Button(root, text="Export CFS", command=export_cfs_button)
-    cfs_button.grid(row=8, column=8)
+    cfs_button.grid(row=16, column=3)
 
     #canvas pannable / zoomable
     meshCanvas = PanableCanvas(root, width=meshWidth, height=meshHeight, bg="lightgrey")
@@ -529,6 +534,8 @@ def closeGui():
 def updateGui():
     from main import Data
     global width, height, boundary_conditions_str, meshCanvas, root
+    if(debugSettings[debugOptions.drawOnFinish].get() and not Data.getHasResult()):
+        return
     root.update()
     if Data.hasMesh:
         #update the mesh in the gui

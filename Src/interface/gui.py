@@ -478,6 +478,32 @@ def create():
         filetypes=[("Pickle files", "*.pkl"), ("All files", "*")]
     ))).grid(row=8, column=3)
     
+    #CFS export button 
+    def export_cfs_button():
+        from main import Data
+        #check if there are results to export
+        if Data.getHasResult() == False:
+            messagebox.showwarning("No results", "No results to export")
+            return
+        #check if there is already a results.cfs
+        if os.path.exists("results.cfs"):
+            #ask for overwrite
+            if messagebox.askyesno("Overwrite", "results.cfs already exists. Overwrite?"):
+                #deete old file
+                try:
+                    os.remove("results.cfs")
+                except Exception as e:
+                    messagebox.showerror("Delete Error", f"Failed to delete old results.cfs:\n{e}")
+                    return
+                #write new file
+                Data.exportCFS()
+                messagebox.showinfo("Export CFS", "CFS file exported to results.cfs")
+            else:
+                return
+        
+    cfs_button = Button(root, text="Export CFS", command=export_cfs_button)
+    cfs_button.grid(row=8, column=8)
+
     #canvas pannable / zoomable
     meshCanvas = PanableCanvas(root, width=meshWidth, height=meshHeight, bg="lightgrey")
     meshCanvas.grid(row=30, column=0, columnspan=21, sticky=N+S+E+W, padx=5, pady=5)

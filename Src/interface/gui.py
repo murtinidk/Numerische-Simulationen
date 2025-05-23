@@ -24,7 +24,12 @@ DEFAULTS = {
     'rightBoundaryType': 'dirichlet',
     'bottomBoundaryType': 'dirichlet',
     'leftBoundaryType': 'dirichlet',
-    'line_type': 'dirichlet',
+    #line
+    'line_x1': '',
+    'line_y1': '',
+    'line_x2': '',
+    'line_y2': '',
+    'line_value': '',
     #values
     'topBoundaryValue': '0',
     'rightBoundaryValue': '0',
@@ -364,21 +369,25 @@ def create():
 
     Label(line_frame, text="X1:").grid(row=0, column=0)
     X1 = Entry(line_frame, width=lfieldwidth)
+    X1.insert(0, settings['line_x1'])
     X1.grid(row=0, column=1)
     Label(line_frame, text="Y1:").grid(row=0, column=2)
     Y1 = Entry(line_frame, width=lfieldwidth)
+    Y1.insert(0, settings['line_y1'])
     Y1.grid(row=0, column=3)
     Label(line_frame, text="X2:").grid(row=0, column=4)
     X2 = Entry(line_frame, width=lfieldwidth)
+    X2.insert(0, settings['line_x2'])
     X2.grid(row=0, column=5)
     Label(line_frame, text="Y2:").grid(row=0, column=6)
     Y2 = Entry(line_frame, width=lfieldwidth)
+    Y2.insert(0, settings['line_y2'])
     Y2.grid(row=0, column=7)
     Label(line_frame, text="Line Value:").grid(row=0, column=8)
     line_value = Entry(line_frame, width=lfieldwidth)
+    line_value.insert(0, settings['line_value'])
     line_value.grid(row=0, column=9)
-    
-    
+
     renderingOptions_frame = Frame(root)
     renderingOptions_frame.grid(row=0, column=8, rowspan=8, columnspan=1)
 
@@ -417,6 +426,11 @@ def create():
         right_value.delete(0, END); right_value.insert(0, vals['rightBoundaryValue'])
         bottom_value.delete(0, END); bottom_value.insert(0, vals['bottomBoundaryValue'])
         left_value.delete(0, END); left_value.insert(0, vals['leftBoundaryValue'])
+        X1.delete(0, END); X1.insert(0, vals['line_x1'])
+        Y1.delete(0, END); Y1.insert(0, vals['line_y1'])
+        X2.delete(0, END); X2.insert(0, vals['line_x2'])
+        Y2.delete(0, END); Y2.insert(0, vals['line_y2'])
+        line_value.delete(0, END); line_value.insert(0, vals['line_value'])
         debugSettings[debugOptions.renderAnything].set(int(vals['options_renderAnything']))
         debugSettings[debugOptions.drawID].set(int(vals['options_drawID']))
         debugSettings[debugOptions.drawEQ].set(int(vals['options_drawEQ']))
@@ -443,6 +457,11 @@ def create():
             'rightBoundaryValue': right_value.get(),
             'bottomBoundaryValue': bottom_value.get(),
             'leftBoundaryValue': left_value.get(),
+            'line_x1': X1.get(),
+            'line_y1': Y1.get(),
+            'line_x2': X2.get(),
+            'line_y2': Y2.get(),
+            'line_value': line_value.get(),
             'options_renderAnything': str(debugSettings[debugOptions.renderAnything].get()),
             'options_drawID': str(debugSettings[debugOptions.drawID].get()),
             'options_drawEQ': str(debugSettings[debugOptions.drawEQ].get()),

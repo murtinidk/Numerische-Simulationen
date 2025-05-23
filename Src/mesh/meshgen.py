@@ -39,7 +39,6 @@ def meshgen():
         ys = np. linspace(line[1], line[3], resolution)
         line_coords = np.column_stack((xs, ys))
         tree = BallTree(nodes_del_edge[:, 1:3], leaf_size=1, metric='euclidean')
-        #index, dist = tree.query_radius(line_coords, max(width/xResolution, height/yResolution)/2, return_distance=True)
         dist, index = tree.query(line_coords, 1, return_distance=True)
         node_id_array = []
         node_dist_array = []
@@ -49,16 +48,18 @@ def meshgen():
 
         node_id_dist = np.column_stack((np.array(node_id_array, dtype=int), np.array(node_dist_array)))
         unique_node_ids = np.unique(np.array(node_id_array, dtype=int))
-        if callable(line[4]):
-            for i in unique_node_ids:
+        for i in unique_node_ids:
+            if callable(line[4]):
                 spec_dist = node_id_dist[node_id_dist[:, 0 ] == i, 1]
                 min_id = np.argmin(spec_dist)
                 #find original id in array
                 indices_node = np.where(node_id_dist[:,0] == i)[0]
                 org_id = indices_node[min_id]
                 #calulate the function value normal from line to node
-                value_in_func = line[4](np.sqrt((abs(line[2]-line[0])/resolution*org_id)**2+(abs(line[3]-line[1])/resolution*org_id)**2))
-                print(value_in_func)
+                func_value = line[4](np.sqrt((abs(line[2]-line[0])/resolution*org_id)**2+(abs(line[3]-line[1])/resolution*org_id)**2))
+                mesh[i].SetDirichletBoundary(func_value)
+            else:
+                mesh[i].SetDirichletBoundary(line[4])
 
 
         

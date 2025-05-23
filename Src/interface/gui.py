@@ -37,6 +37,13 @@ DEFAULTS = {
 BOUNDARY_TYPE_OPTIONS = ["dirichlet", "neumann", "none"]
 
 
+LIBRARY = {
+    "sin": np.sin,
+    "cos": np.cos,
+    "sqrt": np.sqrt,
+}
+
+
 class debugOptions(Enum):
     drawID = 1
     drawEQ = 2
@@ -216,6 +223,16 @@ def getBottomBoundaryValue():
         print("not a valid bottom boundary value input, reverting to default:" + DEFAULTS['bottomBoundaryValue'])
         return DEFAULTS['bottomBoundaryValue']
 
+def createFunktion(string: str):
+    def func(x):
+            return eval(string, {"__builtins__": {}}, {
+                "x": x,
+                "sin": np.sin,
+                "cos": np.cos,
+                "sqrt": np.sqrt,
+                "pi": np.pi,
+            })
+    return func
 
 def get_line():
     x = int(width.get())
@@ -225,7 +242,13 @@ def get_line():
         y1 = float(Y1.get())
         x2 = float(X2.get())
         y2 = float(Y2.get())
-        value = float(line_value.get())
+        value_str = line_value.get()
+        if not value_str:
+            raise ValueError
+        try:
+            value = float(value_str)
+        except:
+            value = createFunktion(value_str)
     except ValueError:
         return None
     if x1 <= 0 or x2 <= 0 or y1 <= 0 or y2 <= 0 or x1 >= x or x2 >= x or y1 >= y or y2 >= y:
@@ -360,8 +383,6 @@ def create():
     Label(line_frame, text="Line Value:").grid(row=0, column=8)
     line_value = Entry(line_frame, width=lfieldwidth)
     line_value.grid(row=0, column=9)
-    line_type = StringVar(root, settings['line_type'])
-    OptionMenu(line_frame, line_type, "dirichlet", "neumann").grid(row=0, column=11)
     
     drawMesh = IntVar(value=int(settings['drawMesh']))
     Label(root, text="draw Mesh:").grid(row=2, column=2)
@@ -615,7 +636,7 @@ def drawLine(line):
     
     lineThickness = 2
 
-    x1, y1, x2, y2 = line
+    x1, y1, x2, y2 = line[:4]
     coords1 = globalToMeshCoords(x1, y1)
     coords2 = globalToMeshCoords(x2, y2)
 

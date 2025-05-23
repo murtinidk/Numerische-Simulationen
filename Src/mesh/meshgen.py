@@ -11,6 +11,7 @@ import interface.gui as gui
 
 # declarations
 
+
 def meshgen():
     global Data
     
@@ -27,6 +28,7 @@ def meshgen():
     mesh = np.array(list(map(lambda x: node.Node(*x), combinations)))
 
     Data.setMesh(mesh)
+    nodes_del_edge = removeEdgeNodes(combinations)
 
     #finding nearest neighbours to line
     gui.setStep(gui.simStep.boundaryConditions)
@@ -36,10 +38,32 @@ def meshgen():
         xs = np.linspace(line[0], line[2], resolution)
         ys = np. linspace(line[1], line[3], resolution)
         line_coords = np.column_stack((xs, ys))
-        tree = BallTree(combinations[:, 1:3], leaf_size=1, metric='euclidean')
-        index = tree.query_radius(line_coords, 1, return_distance=False)
-        flat_indices = np.unique(np.concatenate(index))
-        print(flat_indices)
+        tree = BallTree(nodes_del_edge[:, 1:3], leaf_size=1, metric='euclidean')
+        #index, dist = tree.query_radius(line_coords, max(width/xResolution, height/yResolution)/2, return_distance=True)
+        dist, index = tree.query(line_coords, 1, return_distance=True)
+        node_id_array = []
+        node_dist_array = []
+        for i in range(len(index)):
+            node_id_array.append(nodes_del_edge[index[i],0])
+            node_dist_array.append(dist[i])
+
+        node_id_dist = np.column_stack((np.array(node_id_array, dtype=int), np.array(node_dist_array)))
+        unique_node_ids = np.unique(np.array(node_id_array, dtype=int))
+        if callable(line[4]):
+            for i in unique_node_ids:
+                spec_dist = node_id_dist[node_id_dist[:, 0 ] == i, 1]
+                min_id = np.argmin(spec_dist)
+                #find original id in array
+                indices_node = np.where(node_id_dist[:,0] == i)[0]
+                org_id = indices_node[min_id]
+                #calulate the function value normal from line to node
+                value_in_func = line[4](np.sqrt((abs(line[2]-line[0])/resolution*org_id)**2+(abs(line[3]-line[1])/resolution*org_id)**2))
+                print(value_in_func)
+
+
+        
+        
+        
 
     #TODO add boundary conditioins here
     applyDirichletBoundaryConditions(mesh, width, height)
@@ -129,3 +153,10 @@ def applyDirichletBoundaryConditions(nodes, width, height):
             if btype == 'dirichlet' and node_obj.GetDirichletBoundary() == None:
                 node_obj.SetDirichletBoundary(value)
 
+def removeEdgeNodes(nodes):
+    xmin = 0
+    xmax = max(nodes[:,1])
+    ymin = 0
+    ymax = max(nodes[:,2])
+    conditions = ((nodes[:,1] > xmin) & (nodes[:,1] < xmax) & (nodes[:,2] > ymin) & (nodes[:,2] < ymax))
+    return nodes[conditions]

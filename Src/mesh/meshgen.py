@@ -28,46 +28,15 @@ def meshgen():
     mesh = np.array(list(map(lambda x: node.Node(*x), combinations)))
 
     Data.setMesh(mesh)
-    nodes_del_edge = removeEdgeNodes(combinations)
 
     #finding nearest neighbours to line
     gui.setStep(gui.simStep.boundaryConditions)
     line = Data.getLine()
     if line is not None:
-        resolution = 100
-        xs = np.linspace(line[0], line[2], resolution)
-        ys = np. linspace(line[1], line[3], resolution)
-        line_coords = np.column_stack((xs, ys))
-        tree = BallTree(nodes_del_edge[:, 1:3], leaf_size=1, metric='euclidean')
-        dist, index = tree.query(line_coords, 1, return_distance=True)
-        node_id_array = []
-        node_dist_array = []
-        for i in range(len(index)):
-            node_id_array.append(nodes_del_edge[index[i],0])
-            node_dist_array.append(dist[i])
-
-        node_id_dist = np.column_stack((np.array(node_id_array, dtype=int), np.array(node_dist_array)))
-        unique_node_ids = np.unique(np.array(node_id_array, dtype=int))
-        for i in unique_node_ids:
-            if callable(line[4]):
-                spec_dist = node_id_dist[node_id_dist[:, 0 ] == i, 1]
-                min_id = np.argmin(spec_dist)
-                #find original id in array
-                indices_node = np.where(node_id_dist[:,0] == i)[0]
-                org_id = indices_node[min_id]
-                #calulate the function value normal from line to node
-                func_value = line[4](np.sqrt((abs(line[2]-line[0])/resolution*org_id)**2+(abs(line[3]-line[1])/resolution*org_id)**2))
-                mesh[i].SetDirichletBoundary(func_value)
-            else:
-                mesh[i].SetDirichletBoundary(line[4])
-
-
-        
-        
-        
+        calculateNearestNode(mesh, line, combinations)
 
     #TODO add boundary conditioins here
-    def createBoundaryArray(getType, length, floatValue):
+    '''def createBoundaryArray(getType, length, floatValue):
         if getType == "neumann":
             raise Exception("Neumann boundary conditions not implemented yet")
         if getType == "none" or floatValue == None:
@@ -76,13 +45,12 @@ def meshgen():
             if (type(floatValue) == int or type(floatValue) == float) and getType == "dirichlet":
                 return np.full(length, floatValue)
             else:
-                raise Exception(floatValue + "is not a number")
-
-    applyDirichletBoundaryConditions(mesh, width, height,xResolution, yResolution, {
-        "top":    createBoundaryArray(gui.getTopBoundaryType(), xResolution, gui.getTopBoundaryValue()),
-        "bottom": createBoundaryArray(gui.getBottomBoundaryType(), xResolution, gui.getBottomBoundaryValue()),
-        "left":   createBoundaryArray(gui.getLeftBoundaryType(), yResolution, gui.getLeftBoundaryValue()),
-        "right":  createBoundaryArray(gui.getRightBoundaryType(), yResolution, gui.getRightBoundaryValue())
+                raise Exception(floatValue + "is not a number")'''
+    applyDirichletBoundaryConditions(mesh, width, height,xResolution, yResolution,{
+        "top":    createBoundaryArray(width, xResolution, Data.getTop()),
+        "bottom": createBoundaryArray(width, xResolution, Data.getBottom()),
+        "left":   createBoundaryArray(height, yResolution, Data.getLeft()),
+        "right":  createBoundaryArray(height, yResolution, Data.getRight())
     })
     
     gui.setStep(gui.simStep.meshTables)
@@ -125,6 +93,46 @@ def meshgen():
     #print(f"Mesh generated with width={Data.getWidth()}, height={Data.getHeight()}, xResolution={Data.getXResolution()}, yResolution={Data.getYResolution()}, boundary={Data.getBoundary()}")
     # Function to generate a mesh for the simulation
     # This function will create a mesh based on the specified parameters and return it
+
+def createBoundaryArray(length, res, boundary_func):
+    section = np.linspace(0, length, res)    
+    if callable(boundary_func):
+        return np.array([boundary_func(x) for x in section])
+    else:
+        return np.full(res, boundary_func)
+
+
+def calculateNearestNode(mesh, line, combinations):
+    resolution = 100
+    nodes_del_edge = removeEdgeNodes(combinations)
+    xs = np.linspace(line[0], line[2], resolution)
+    ys = np. linspace(line[1], line[3], resolution)
+    line_coords = np.column_stack((xs, ys))
+    tree = BallTree(nodes_del_edge[:, 1:3], leaf_size=1, metric='euclidean')
+    dist, index = tree.query(line_coords, 1, return_distance=True)
+    node_id_array = []
+    node_dist_array = []
+    for i in range(len(index)):
+        node_id_array.append(nodes_del_edge[index[i],0])
+        node_dist_array.append(dist[i])
+    node_id_dist = np.column_stack((np.array(node_id_array, dtype=int), np.array(node_dist_array)))
+    calculateLineFunc(line, node_id_array,node_id_dist,resolution,mesh)
+    
+
+def calculateLineFunc(line, node_id_array,node_id_dist,resolution,mesh):
+    unique_node_ids = np.unique(np.array(node_id_array, dtype=int))
+    for i in unique_node_ids:
+        if callable(line[4]):
+            spec_dist = node_id_dist[node_id_dist[:, 0 ] == i, 1]
+            min_id = np.argmin(spec_dist)
+            #find original id in array
+            indices_node = np.where(node_id_dist[:,0] == i)[0]
+            org_id = indices_node[min_id]
+            #calulate the function value normal from line to node
+            func_value = line[4](np.sqrt((abs(line[2]-line[0])/resolution*org_id)**2+(abs(line[3]-line[1])/resolution*org_id)**2))
+            mesh[i].SetDirichletBoundary(func_value)
+        else:
+            mesh[i].SetDirichletBoundary(line[4])
 
 def applyDirichletBoundaryConditions(nodes, width, height, xres, yres, dirichlet_arrays):
     if dirichlet_arrays is None or len(dirichlet_arrays) != 4:

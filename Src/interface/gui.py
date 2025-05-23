@@ -171,6 +171,18 @@ def get_yResolution():
     except ValueError:
         raise Exception("Height Resolution input not valid")
     
+def createFunktion(string: str):
+    def func(x):
+            return eval(string, {"__builtins__": {}}, {
+                "x": x,
+                "sin": np.sin,
+                "cos": np.cos,
+                "sqrt": np.sqrt,
+                "pi": np.pi,
+            })
+    return func
+
+
 def getLeftBoundaryType():
     try:
         return left_boundary.get()
@@ -179,9 +191,17 @@ def getLeftBoundaryType():
 
 def getLeftBoundaryValue():
     try:
-        return float(left_value.get())
+        value_str = left_value.get()
+        if not value_str:
+            raise ValueError
+        try:
+            value = float(value_str)
+        except:
+            value = createFunktion(value_str)
+        return value
     except ValueError:
         raise Exception("Leftboundary not a valid boundary value input")
+    
 
 def getRightBoundaryType():
     try:
@@ -191,7 +211,14 @@ def getRightBoundaryType():
 
 def getRightBoundaryValue():
     try:
-        return float(right_value.get())
+        value_str = right_value.get()
+        if not value_str:
+            raise ValueError
+        try:
+            value = float(value_str)
+        except:
+            value = createFunktion(value_str)
+        return value
     except ValueError:
         raise Exception("Rightboundary not a valid boundary value input")
 
@@ -203,7 +230,14 @@ def getTopBoundaryType():
 
 def getTopBoundaryValue():
     try:
-        return float(top_value.get())
+        value_str = top_value.get()
+        if not value_str:
+            raise ValueError
+        try:
+            value = float(value_str)
+        except:
+            value = createFunktion(value_str)
+        return value
     except ValueError:
         raise Exception("Topboundary not a valid boundary value input")
 
@@ -215,20 +249,18 @@ def getBottomBoundaryType():
 
 def getBottomBoundaryValue():
     try:
-        return float(bottom_value.get())
+        value_str = bottom_value.get()
+        if not value_str:
+            raise ValueError
+        try:
+            value = float(value_str)
+        except:
+            value = createFunktion(value_str)
+        return value
     except ValueError:
         raise Exception("Bottomboundary not a valid boundary value input")
 
-def createFunktion(string: str):
-    def func(x):
-            return eval(string, {"__builtins__": {}}, {
-                "x": x,
-                "sin": np.sin,
-                "cos": np.cos,
-                "sqrt": np.sqrt,
-                "pi": np.pi,
-            })
-    return func
+
 
 def get_line():
     x = int(width.get())

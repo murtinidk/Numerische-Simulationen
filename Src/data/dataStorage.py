@@ -17,6 +17,14 @@ class DataClass:
         self.mesh = None
         self.line = None
         self.hasLine = False
+        self.left = None
+        self.hasLeft = False
+        self.top = None
+        self.hasTop = False
+        self.right = None
+        self.hasRight = False
+        self.bottom = None
+        self.hasBottom = False
         self.hasIEN = False
         self.IEN = None
         self.hasNE = False
@@ -69,6 +77,66 @@ class DataClass:
         if(not self.hasLine):
             return None
         return self.line
+    
+    
+    
+    def setLeftBoundary(self, left):
+        if(self.hasLeft):
+            raise Exception("Left Boundary already set!")
+        if left is not None:
+            self.left = left
+            self.hasLeft = True
+    def hasLeft(self):
+        return self.hasLeft
+    def getLeft(self):
+        if(not self.hasLeft):
+            return None
+        return self.left
+    
+    def setTopBoundary(self, top):
+        if(self.hasTop):
+            raise Exception("Top Boundary already set!")
+        if top is not None:
+            self.top = top
+            self.hasTop= True
+    def hasTop(self):
+        return self.hasTop
+    def getTop(self):
+        if(not self.hasTop):
+            return None
+        return self.top
+    
+    def setRightBoundary(self, right):
+        if(self.hasRight):
+            raise Exception("Left Boundary already set!")
+        if right is not None:
+            self.right = right
+            self.hasRight = True
+    def hasRight(self):
+        return self.hasRight
+    def getRight(self):
+        if(not self.hasRight):
+            return None
+        return self.right
+    
+    def setBottomBoundary(self, bottom):
+        if(self.hasBottom):
+            raise Exception("Left Boundary already set!")
+        if bottom is not None:
+            self.bottom = bottom
+            self.hasBottom = True
+    def hasBottom(self):
+        return self.hasBottom
+    def getBottom(self):
+        if(not self.hasBottom):
+            return None
+        return self.bottom
+    
+    def setBoundary(self, left, top, bottom, right):
+        self.setLeftBoundary(left)
+        self.setTopBoundary(top)
+        self.setRightBoundary(right)
+        self.setBottomBoundary(bottom)
 
     def setMesh(self, mesh):
         if(self.hasMesh):

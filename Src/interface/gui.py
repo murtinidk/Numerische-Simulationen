@@ -577,6 +577,10 @@ def create():
                 messagebox.showinfo("Export CFS", "CFS file exported to results.cfs")
             else:
                 return
+        else:
+            Data.exportCFS()
+            messagebox.showinfo("Export CFS", "CFS file exported to results.cfs")
+            
         
     cfs_button = Button(root, text="Export CFS", command=export_cfs_button)
     cfs_button.grid(row=16, column=3)

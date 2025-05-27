@@ -284,7 +284,7 @@ def get_line():
     return np.array([x1,y1,x2,y2, value])
     
 def create():
-    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas , config_path, step_text, root
+    global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas , config_path, step_text, root, temperatureCanvas
     global X1, Y1, X2, Y2, line_frame, line_value, line_type
     global top_value, top_boundary, right_value, right_boundary, bottom_boundary, bottom_value, left_boundary, left_value
     #default config path
@@ -585,9 +585,17 @@ def create():
     cfs_button = Button(root, text="Export CFS", command=export_cfs_button)
     cfs_button.grid(row=16, column=3)
 
+    #temperature scale
+    tcx, tcy, tcwidth, tcheight = root.grid_bbox(row=30, column=0)
+    temperatureCanvas = Canvas(root, width=tcwidth, height=tcheight, bg="lightgrey")
+    temperatureCanvas.grid(row=30, column=0, sticky=N+S+E+W, padx=5, pady=5)
+    root.grid_columnconfigure(0, weight=0)
+    #redraw tempscale when resized
+    temperatureCanvas.bind("<Configure>", resizeTempscale)
+    
     #canvas pannable / zoomable
     meshCanvas = PanableCanvas(root, width=meshWidth, height=meshHeight, bg="lightgrey")
-    meshCanvas.grid(row=30, column=0, columnspan=21, sticky=N+S+E+W, padx=5, pady=5)
+    meshCanvas.grid(row=30, column=1, columnspan=21, sticky=N+S+E+W, padx=5, pady=5)
     root.grid_rowconfigure(30, weight=1)
     root.grid_columnconfigure(20, weight=1)
 
@@ -609,13 +617,14 @@ def closeGui():
 
 def updateGui():
     from main import Data
-    global width, height, boundary_conditions_str, meshCanvas, root
+    global width, height, boundary_conditions_str, meshCanvas, root, temperatureCanvas
     if(debugSettings[debugOptions.drawOnFinish].get() and not Data.getHasResult()):
         return
     root.update()
     if Data.hasMesh:
         #update the mesh in the gui
         meshCanvas.delete("all")
+        temperatureCanvas.delete("all")
         if(debugSettings[debugOptions.renderAnything].get()):
             if(debugSettings[debugOptions.drawValues].get() and Data.getHasResult()):
                 drawColor()
@@ -623,7 +632,7 @@ def updateGui():
             drawArrow()
             drawLine(Data.getLine())
             
-            if((debugSettings[debugOptions.drawNodes].get()) or (not debugSettings[debugOptions.drawID].get()) or (debugSettings[debugOptions.drawEQ].get())):
+            if((debugSettings[debugOptions.drawNodes].get()) or (debugSettings[debugOptions.drawID].get()) or (debugSettings[debugOptions.drawEQ].get())):
                 for node in mesh:
                     drawNode(node)
                 
@@ -768,6 +777,14 @@ def drawColor():
             minValue = min(minValue, node.GetValue())
             maxValue = max(maxValue, node.GetValue())
     valueRange = maxValue - minValue
+    #make sure not every value is the same, which would draw random grainy colors
+    if valueRange == 0:
+        valueRange = 1
+    #also check for small rounding errors
+    if valueRange < maxValue / 100000:
+        valueRange = maxValue / 100000
+        
+    drawTemperatureScale(minValue, maxValue, valueRange)
 
     for e in range(Data.getNe()):
         element_ = element.Element(e)
@@ -786,20 +803,54 @@ def drawColor():
                 x1, y1 = globalToMeshCoords(xborder[i], yborder[j])
                 x2, y2 = globalToMeshCoords(xborder[i+1], yborder[j+1])
                 value = valueInElement(xprobe[i], yprobe[j], e)
-                #make sure not every value is the same, which would draw random grainy colors
-                if valueRange == 0:
-                    valueRange = 1
-                #also check for small rounding errors
-                if valueRange < maxValue / 100000:
-                    valueRange = maxValue / 100000
-                hottness = (value - minValue) / valueRange #should be from 0 to 1
-                # sometimes it is not. clamp it
-                #hottness = max(0, min(1, hottness))
-                r = int(hottness * 192) + 63
-                g = 63
-                b = int((1 - hottness) * 192) + 63
-                color = "#%02x%02x%02x" % (r, g, b)
+                color = getColorFromValue(value, minValue, valueRange)
                 meshCanvas.create_rectangle(x1, y1, x2, y2, fill=color, outline=color)
+   
+def drawTemperatureScale(minValue, maxValue, valueRange):
+    global temperatureCanvas, ColorResolution
+    global lastMinValue, lastMaxValue, lastValueRange
+    
+    lastMinValue = minValue
+    lastMaxValue = maxValue
+    lastValueRange = valueRange
+    temperatureCanvas.delete("all")
+    scaleMargin = 20
+    textMargin = 50
+    textValues = 5
+
+    for i in range(ColorResolution):
+        value = minValue + i * (valueRange / ColorResolution)
+        color = getColorFromValue(value, minValue, valueRange)
+        y1 = i * ((temperatureCanvas.winfo_height() - 2* scaleMargin) / ColorResolution) + scaleMargin
+        y2 = (i + 1) * ((temperatureCanvas.winfo_height() - 2 * scaleMargin) / ColorResolution) + scaleMargin
+        temperatureCanvas.create_rectangle(scaleMargin, y1, temperatureCanvas.winfo_width() - textMargin, y2, fill=color, outline=color)
+    for i in range(textValues):
+        value = minValue + i * (valueRange / (textValues-1))
+        color = getColorFromValue(value, minValue, valueRange)
+        temperatureCanvas.create_text(temperatureCanvas.winfo_width() - textMargin,\
+            (i)*((temperatureCanvas.winfo_height() - 2* scaleMargin) / (textValues - 1)) + scaleMargin, \
+            text=f"{value:.3f}", anchor=W)
+        
+def resizeTempscale(event):
+    global temperatureCanvas, lastMinValue, lastMaxValue, lastValueRange
+    from main import Data
+    if lastMinValue is not None and lastMaxValue is not None and lastValueRange is not None and Data.getHasResult():
+        drawTemperatureScale(lastMinValue, lastMaxValue, lastValueRange)
+    else:
+        temperatureCanvas.delete("all")
+                
+def getColorFromValue(value, minValue, valueRange):
+    hottness = (value - minValue) / valueRange #should be from 0 to 1
+    # sometimes it is not. clamp it
+    #hottness = max(0, min(1, hottness))
+    #hottness = 1/(1 + np.exp(-(hottness - 0.5) * 12))*0.3 + hottness * 0.7
+    #hottness = np.tanh((hottness -0.5 ) * 4)/2 + 0.5
+    r = int(hottness**1.5 * 192) + 63
+    g = 63
+    b = int((1 - hottness)**1.5 * 192) + 63
+    color = "#%02x%02x%02x" % (r, g, b)
+    return color
+    
 
 def valueInElement(x, y, elementId):
     from main import Data

@@ -198,11 +198,11 @@ def applyDirichletBoundaryConditions(nodes, width, height, xres, yres, dirichlet
         #average: both neighbors are set, two corner values are set
         if neighborA != None and neighborB != None and valA != None and valB != None:
             nodes[idx].SetDirichletBoundary((neighborA + neighborB) / 2)
-        elif valA != None:
-            nodes[idx].SetDirichletBoundary(valA)
-        elif valB != None:
-            nodes[idx].SetDirichletBoundary(valB)
-        
+        # elif valA != None:
+        #     nodes[idx].SetDirichletBoundary(valA)
+        # elif valB != None:
+        #     nodes[idx].SetDirichletBoundary(valB)
+        #TODO: needs to be reworked
     
 
 def removeEdgeNodes(nodes):

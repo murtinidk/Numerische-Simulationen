@@ -59,8 +59,8 @@ def calculateSystemMatrixAndVector() -> tuple[Type[sparse.csr_matrix], list[floa
               if(valuesDict.get((eq1, eq2)) == None):
                 valuesDict[(eq1, eq2)] = 0
               valuesDict[(eq1, eq2)] += elementmatrix[a][b]
-              
-  
+
+  #add line value to right hand side vector
   for node_id, eq_id in Data.getNE().items():
     node = Data.getMesh()[node_id]
     systemVector[eq_id] += node.GetLineAddition()

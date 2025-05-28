@@ -206,7 +206,7 @@ def applyDirichletBoundaryConditions(nodes, width, height, xres, yres, dirichlet
                 #+1 to skip first value in the array -> corner value
                 if dirichlet_array[i+1] is not None:
                     nodes[node_id].SetDirichletBoundary(dirichlet_array[i+1])
-              
+    
     #apply corner values
     #check corner intersection -> avg val of neighboring nodes
     corners_values = {

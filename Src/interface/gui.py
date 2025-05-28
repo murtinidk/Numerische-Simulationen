@@ -194,7 +194,7 @@ def getLeftBoundaryValue():
         return None
     elif getLeftBoundaryType() == 'dirichlet':
         try:
-            value_str = top_value.get()
+            value_str = left_value.get()
             if not value_str:
                 raise ValueError
             try:
@@ -206,7 +206,7 @@ def getLeftBoundaryValue():
             raise Exception("Dirichlet left-boundary not a valid boundary value input")
     elif getLeftBoundaryType() == 'neumann':
         try:
-            value_str = top_value.get()
+            value_str = left_value.get()
             if not value_str:
                 raise ValueError
             try:
@@ -228,7 +228,7 @@ def getRightBoundaryValue():
         return None
     elif getRightBoundaryType() == 'dirichlet':
         try:
-            value_str = top_value.get()
+            value_str = right_value.get()
             if not value_str:
                 raise ValueError
             try:
@@ -240,7 +240,7 @@ def getRightBoundaryValue():
             raise Exception("Dirichlet right-boundary not a valid boundary value input")
     elif getRightBoundaryType() == 'neumann':
         try:
-            value_str = top_value.get()
+            value_str = right_value.get()
             if not value_str:
                 raise ValueError
             try:
@@ -295,7 +295,7 @@ def getBottomBoundaryValue():
         return None
     elif getBottomBoundaryType() == 'dirichlet':
         try:
-            value_str = top_value.get()
+            value_str = bottom_value.get()
             if not value_str:
                 raise ValueError
             try:
@@ -307,7 +307,7 @@ def getBottomBoundaryValue():
             raise Exception("Dirichlet bottom-boundary not a valid boundary value input")
     elif getBottomBoundaryType() == 'neumann':
         try:
-            value_str = top_value.get()
+            value_str = bottom_value.get()
             if not value_str:
                 raise ValueError
             try:

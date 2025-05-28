@@ -60,6 +60,11 @@ def calculateSystemMatrixAndVector() -> tuple[Type[sparse.csr_matrix], list[floa
                 valuesDict[(eq1, eq2)] = 0
               valuesDict[(eq1, eq2)] += elementmatrix[a][b]
               
+  
+  for node_id, eq_id in Data.getNE().items():
+    node = Data.getMesh()[node_id]
+    systemVector[eq_id] += node.GetLineAddition()
+  
   #convert to sparse matrix
   values = list(valuesDict.values())
   (rows, cols) = zip(*valuesDict.keys()) 

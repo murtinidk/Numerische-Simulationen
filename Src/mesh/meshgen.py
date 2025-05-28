@@ -33,7 +33,7 @@ def meshgen():
     gui.setStep(gui.simStep.boundaryConditions)
     line = Data.getLine()
     if line is not None:
-        calculateNearestNode(mesh, line, combinations)
+        calculateLineValues(mesh, line, combinations)
 
     #TODO add boundary conditioins here
     '''def createBoundaryArray(getType, length, floatValue):
@@ -102,21 +102,52 @@ def createBoundaryArray(length, res, boundary_func):
         return np.full(res, boundary_func)
 
 
-def calculateNearestNode(mesh, line, combinations):
-    resolution = 100
-    nodes_del_edge = removeEdgeNodes(combinations)
+def calculateLineValues(mesh, line, combinations):
+    width = Data.getWidth()
+    height = Data.getHeight() 
+    xRes = Data.getXResolution()
+    yRes = Data.getYResolution()
+    resolution = 100*int((xRes+yRes)/2)
+    xIntervall = width/(xRes-1)
+    yIntervall = height/(yRes-1)
     xs = np.linspace(line[0], line[2], resolution)
     ys = np. linspace(line[1], line[3], resolution)
     line_coords = np.column_stack((xs, ys))
-    tree = BallTree(nodes_del_edge[:, 1:3], leaf_size=1, metric='euclidean')
-    dist, index = tree.query(line_coords, 1, return_distance=True)
-    node_id_array = []
-    node_dist_array = []
-    for i in range(len(index)):
-        node_id_array.append(nodes_del_edge[index[i],0])
-        node_dist_array.append(dist[i])
-    node_id_dist = np.column_stack((np.array(node_id_array, dtype=int), np.array(node_dist_array)))
-    calculateLineFunc(line, node_id_array,node_id_dist,resolution,mesh)
+    ds = np.sqrt((line[0]- line[2])**2 + (line[1]-line[3])**2)/resolution
+    e = 1e-20
+    for i in line_coords:
+        node_TL_ind = int(np.floor(i[1]/yIntervall)*xRes + np.floor(i[0]/xIntervall))
+        node_TR_ind = int(np.floor(i[1]/yIntervall)*xRes + np.ceil(i[0]/xIntervall))
+        node_BL_ind = int(np.ceil(i[1]/yIntervall)*xRes + np.floor(i[0]/xIntervall))
+        node_BR_ind = int(np.ceil(i[1]/yIntervall)*xRes + np.ceil(i[0]/xIntervall))
+
+        node_TL_coords = combinations[node_TL_ind]
+        node_TR_coords = combinations[node_TR_ind]
+        node_BL_coords = combinations[node_BL_ind]
+        node_BR_coords = combinations[node_BR_ind]
+
+        dist_TL = np.sqrt((i[0]-node_TL_coords[1])**2+(i[1]-node_TL_coords[2])**2)+e
+        dist_TR = np.sqrt((i[0]-node_TR_coords[1])**2+(i[1]-node_TR_coords[2])**2)+e
+        dist_BL = np.sqrt((i[0]-node_BL_coords[1])**2+(i[1]-node_BL_coords[2])**2)+e
+        dist_BR = np.sqrt((i[0]-node_BR_coords[1])**2+(i[1]-node_BR_coords[2])**2)+e
+
+        if callable(line[4]):
+            func_value = line[4](np.sqrt((i[0]-line_coords[0,[0]])**2+(i[1]-line_coords[0,[1]])**2))
+        else:
+            func_value = line[4]
+        weight = 1/dist_TL + 1/dist_TR + 1/dist_BL + 1/dist_BR
+
+        weight_TL = 1/dist_TL/weight
+        weight_TR = 1/dist_TR/weight
+        weight_BL = 1/dist_BL/weight
+        weight_BR = 1/dist_BR/weight
+
+        mesh[node_TL_ind].SetLineAddition(float(func_value*weight_TL*ds))
+        mesh[node_TR_ind].SetLineAddition(float(func_value*weight_TR*ds))
+        mesh[node_BL_ind].SetLineAddition(float(func_value*weight_BL*ds))
+        mesh[node_BR_ind].SetLineAddition(float(func_value*weight_BR*ds))
+        
+
     
 
 def calculateLineFunc(line, node_id_array,node_id_dist,resolution,mesh):

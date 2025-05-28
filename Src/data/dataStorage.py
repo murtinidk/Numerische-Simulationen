@@ -262,9 +262,6 @@ class DataClass:
             connec_plot[element, 1] = self.getIENof(3, element)
             connec_plot[element, 2] = self.getIENof(0, element)
             connec_plot[element, 3] = self.getIENof(1, element)
-        print(connec_plot)
-        print(U)
-        print(self.getElementMatrixMap())
         #create instance of writer class
         writer = CFSwriter.EXPORT(
                 nodesPerEl=nodesPerEl,

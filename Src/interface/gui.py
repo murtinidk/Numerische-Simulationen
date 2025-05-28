@@ -190,17 +190,31 @@ def getLeftBoundaryType():
         raise Exception("LeftboundaryType not a valid boundary input")
 
 def getLeftBoundaryValue():
-    try:
-        value_str = left_value.get()
-        if not value_str:
-            raise ValueError
+    if getLeftBoundaryType() == 'none':
+        return None
+    elif getLeftBoundaryType() == 'dirichlet':
         try:
-            value = float(value_str)
-        except:
-            value = createFunktion(value_str)
-        return value
-    except ValueError:
-        raise Exception("Leftboundary not a valid boundary value input")
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except:
+                value = createFunktion(value_str)
+            return value
+        except ValueError:
+            raise Exception("Dirichlet left-boundary not a valid boundary value input")
+    elif getLeftBoundaryType() == 'neumann':
+        try:
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except ValueError:
+                raise Exception("Neumann left-boundary can only be a constant")
+        except ValueError:
+            raise Exception("Neumann left-boundary not a valid boundary value input")
     
 
 def getRightBoundaryType():
@@ -210,17 +224,32 @@ def getRightBoundaryType():
         raise Exception("RightboundaryType not a valid boundary input")
 
 def getRightBoundaryValue():
-    try:
-        value_str = right_value.get()
-        if not value_str:
-            raise ValueError
+    if getRightBoundaryType() == 'none':
+        return None
+    elif getRightBoundaryType() == 'dirichlet':
         try:
-            value = float(value_str)
-        except:
-            value = createFunktion(value_str)
-        return value
-    except ValueError:
-        raise Exception("Rightboundary not a valid boundary value input")
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except:
+                value = createFunktion(value_str)
+            return value
+        except ValueError:
+            raise Exception("Dirichlet right-boundary not a valid boundary value input")
+    elif getRightBoundaryType() == 'neumann':
+        try:
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except ValueError:
+                raise Exception("Neumann right-boundary can only be a constant")
+        except ValueError:
+            raise Exception("Neumann right-boundary not a valid boundary value input")
+
 
 def getTopBoundaryType():
     try:
@@ -229,17 +258,31 @@ def getTopBoundaryType():
         raise Exception("TopboundaryType not a valid boundary input")
 
 def getTopBoundaryValue():
-    try:
-        value_str = top_value.get()
-        if not value_str:
-            raise ValueError
+    if getTopBoundaryType() == 'none':
+        return None
+    elif getTopBoundaryType() == 'dirichlet':
         try:
-            value = float(value_str)
-        except:
-            value = createFunktion(value_str)
-        return value
-    except ValueError:
-        raise Exception("Topboundary not a valid boundary value input")
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except:
+                value = createFunktion(value_str)
+            return value
+        except ValueError:
+            raise Exception("Dirichlet top-boundary not a valid boundary value input")
+    elif getTopBoundaryType() == 'neumann':
+        try:
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except ValueError:
+                raise Exception("Neumann top-boundary can only be a constant")
+        except ValueError:
+            raise Exception("Neumann top-boundary not a valid boundary value input")
 
 def getBottomBoundaryType():
     try:
@@ -248,17 +291,31 @@ def getBottomBoundaryType():
         raise Exception("BottomboundaryType not a valid boundary input")
 
 def getBottomBoundaryValue():
-    try:
-        value_str = bottom_value.get()
-        if not value_str:
-            raise ValueError
+    if getBottomBoundaryType() == 'none':
+        return None
+    elif getBottomBoundaryType() == 'dirichlet':
         try:
-            value = float(value_str)
-        except:
-            value = createFunktion(value_str)
-        return value
-    except ValueError:
-        raise Exception("Bottomboundary not a valid boundary value input")
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except:
+                value = createFunktion(value_str)
+            return value
+        except ValueError:
+            raise Exception("Dirichlet bottom-boundary not a valid boundary value input")
+    elif getBottomBoundaryType() == 'neumann':
+        try:
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except ValueError:
+                raise Exception("Neumann bottom-boundary can only be a constant")
+        except ValueError:
+            raise Exception("Neumann bottom-boundary not a valid boundary value input")
 
 
 

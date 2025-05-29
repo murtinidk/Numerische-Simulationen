@@ -208,7 +208,7 @@ def getDirichletCornerValue(target_idx:int, nodes, xres:int) -> float:
 
 '''
 returns indexes of neighboring nodes, as defined in function above 
--> since mesh is 1d array, check if neighbor using (x,y)-coords
+-> since mesh is 1d array, check if truly a neighbor using (x,y)-coords
 '''
 def getNeighboringIndexes(target_idx:int, xres:int, nodes):
     target_x, target_y = nodes[target_idx].GetX(), nodes[target_idx].GetY()
@@ -263,7 +263,22 @@ def applyBoundaryConditions(mesh,xres:int, value_arrays:dict) -> None:
                 if value_for_node is not None:
                     mesh[node_mesh_idx].SetDirichletBoundary(value_for_node)
         if edge_type == "neumann":
-            print("Neumann boundary not implemented yet:"+ edge + " edge application skipped")
+            print(value_arrays[edge])
+            #TODO: duplicate code -> put into dict 
+            if edge == "top" or edge == "bottom":
+                #apply neumann values to right von Neumann boundary
+                for i, node_mesh_idx in enumerate(edge_indexes):
+                    value_for_node = value_array[i+1]
+                    if value_for_node is not None:
+                        mesh[node_mesh_idx].SetRightVonNeumannBoundary(value_for_node)
+            if edge == "left" or edge == "right":
+                #apply neumann values to right von Neumann boundary
+                for i, node_mesh_idx in enumerate(edge_indexes):
+                    value_for_node = value_array[i+1]
+                    if value_for_node is not None:
+                        mesh[node_mesh_idx].SetBelowVonNeumannBoundary(value_for_node)
+            else:
+                print("Neumann boundary not implemented yet:"+ edge + " edge application skipped")
     
     #apply corner logic
 

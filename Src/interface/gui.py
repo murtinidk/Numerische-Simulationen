@@ -213,6 +213,7 @@ def getLeftBoundaryValue():
                 value = float(value_str)
             except ValueError:
                 raise Exception("Neumann left-boundary can only be a constant")
+            return value
         except ValueError:
             raise Exception("Neumann left-boundary not a valid boundary value input")
     
@@ -247,6 +248,7 @@ def getRightBoundaryValue():
                 value = float(value_str)
             except ValueError:
                 raise Exception("Neumann right-boundary can only be a constant")
+            return value
         except ValueError:
             raise Exception("Neumann right-boundary not a valid boundary value input")
 
@@ -281,6 +283,7 @@ def getTopBoundaryValue():
                 value = float(value_str)
             except ValueError:
                 raise Exception("Neumann top-boundary can only be a constant")
+            return value
         except ValueError:
             raise Exception("Neumann top-boundary not a valid boundary value input")
 
@@ -314,6 +317,7 @@ def getBottomBoundaryValue():
                 value = float(value_str)
             except ValueError:
                 raise Exception("Neumann bottom-boundary can only be a constant")
+            return value
         except ValueError:
             raise Exception("Neumann bottom-boundary not a valid boundary value input")
 
@@ -788,12 +792,22 @@ def drawNode(node):
             meshCanvas.create_text(x - nodeRadius, y - nodeRadius, text= EN, fill="black", font="Arial 8", anchor=SE, width=90)
 
     if(debugSettings[debugOptions.writeValues].get()):
+        text = ""
         if(not node.GetResult() is None):
             text = "Result:" + f"{node.GetResult():.3f}"
         elif(not node.GetDirichletBoundary() is None):
             text = "Dirichlet:" + f"{node.GetDirichletBoundary():.3f}"
         else:
             text = "Result: None"
+        #meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= text, fill="black", font="Arial 8", anchor=NW, width=70)
+        #add line if there are neumann conditions set
+        #belowVonNeumannBoundary rightVonNeumannBoundary
+        if(node.GetRightVonNeumannBoundary() is not None or node.GetBelowVonNeumannBoundary() is not None):
+            text += "\nNeumann: "
+            if(node.GetRightVonNeumannBoundary() is not None):
+                text += "R:" + f"{node.GetRightVonNeumannBoundary():.3f} "
+            if(node.GetBelowVonNeumannBoundary() is not None):
+                text += "B:" + f"{node.GetBelowVonNeumannBoundary():.3f} "
         meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= text, fill="black", font="Arial 8", anchor=NW, width=70)
 
 def drawLine(line):

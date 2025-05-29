@@ -212,32 +212,24 @@ returns indexes of neighboring nodes, as defined in function above
 '''
 def getNeighboringIndexes(target_idx:int, xres:int, nodes):
     target_x, target_y = nodes[target_idx].GetX(), nodes[target_idx].GetY()
-    #try to get left index
-    left_id = target_idx - 1
-    right_id = target_idx + 1
-    top_id = target_idx - xres
-    bottom_id = target_idx + xres
+    #use array of dict to define neighbors, with offset and expected coordinate
+    #example: left neighbor has offset -1, and must have the same y-coordinate as target node
+    neighbor_definitions = [
+        {"offset": -1,   "coord": lambda node: node.GetY(), "expected_coord": target_y},  #left
+        {"offset": +1,   "coord": lambda node: node.GetY(), "expected_coord": target_y},  #right
+        {"offset": -xres,"coord": lambda node: node.GetX(), "expected_coord": target_x},  #top
+        {"offset": +xres,"coord": lambda node: node.GetX(), "expected_coord": target_x}   #bottom
+    ]
+
     neighbor_indexes = []
-    #check left node bound and corresponding y value
-    if isInBounds(left_id, nodes):
-        left_coord = nodes[left_id].GetY()
-        if np.isclose(left_coord, target_y):
-            neighbor_indexes.append(left_id)
-    #check if left index has same y value as target
-    if isInBounds(right_id, nodes):
-        right_coord = nodes[right_id].GetY()
-        if np.isclose(right_coord, target_y):
-            neighbor_indexes.append(right_id)
-    #check if top index has same x value as target
-    if isInBounds(top_id, nodes):
-        top_coord = nodes[top_id].GetX()
-        if np.isclose(top_coord, target_x):
-            neighbor_indexes.append(top_id)
-    #check if bottom index has same x value as target
-    if isInBounds(bottom_id, nodes):
-        bottom_coord = nodes[bottom_id].GetX()
-        if np.isclose(bottom_coord, target_x):
-            neighbor_indexes.append(bottom_id)    
+    for definition in neighbor_definitions:
+        potential_idx = target_idx + definition["offset"]
+        if isInBounds(potential_idx, nodes):
+            potential_neighbor_node = nodes[potential_idx]
+            #check if potential idx matches the expected coordinate (float comparison)
+            if np.isclose(definition["coord"](potential_neighbor_node), definition["expected_coord"]):
+                neighbor_indexes.append(potential_idx)
+                
     return neighbor_indexes
 
 #checks if index is in bounds of mesh indexes

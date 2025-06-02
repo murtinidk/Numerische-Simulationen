@@ -90,9 +90,10 @@ class Element:
   
   def LhsIntegrationPoint(self, a:int, b:int, xi:float, eta:float):
     from main import Data
+    material_tensor = Data.getTensor()
     NiTerm = (np.dot(self.GetJacobianInverseTronspose(), self.LocHutFderivative2D(a=a, xi=xi, eta=eta)))
     NjTerm = (np.dot(self.GetJacobianInverseTronspose(), self.LocHutFderivative2D(a=b, xi=xi, eta=eta)))
-    return np.dot(NiTerm, NjTerm) * self.GetJacobianDeterminant()
+    return np.dot(NiTerm, np.dot(material_tensor,NjTerm)) * self.GetJacobianDeterminant()
   
   def ElementMatrix(self):
     ElementMatrix = []

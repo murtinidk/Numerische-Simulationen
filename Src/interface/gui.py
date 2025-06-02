@@ -35,6 +35,11 @@ DEFAULTS = {
     'rightBoundaryValue': '0',
     'bottomBoundaryValue': '0',
     'leftBoundaryValue': '0',
+    #material tensor
+    'v_xx': '1',
+    'v_xy': '0',
+    'v_yx': '0',
+    'v_yy': '1',
     
     #debug options
     'options_renderAnything': '1',
@@ -339,11 +344,23 @@ def get_line():
     if x1 <= 0 or x2 <= 0 or y1 <= 0 or y2 <= 0 or x1 >= x or x2 >= x or y1 >= y or y2 >= y:
         raise ValueError
     return np.array([x1,y1,x2,y2, value])
+
+def get_Tensor():
+    try:
+        xx = float(V_xx.get())
+        xy = float(V_xy.get())
+        yx = float(V_yx.get())
+        yy = float(V_yy.get())
+    except ValueError:
+        raise Exception("Not a valid material tensor format!")
+        return
+    return np.array([[xx, xy], [yx, yy]])
     
 def create():
     global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas , config_path, step_text, root, temperatureCanvas
     global X1, Y1, X2, Y2, line_frame, line_value, line_type
     global top_value, top_boundary, right_value, right_boundary, bottom_boundary, bottom_value, left_boundary, left_value
+    global V_xx, V_xy, V_yx, V_yy
     #default config path
     global config_path
     config_path = "settings.conf"
@@ -476,6 +493,29 @@ def create():
     line_value = Entry(line_frame, width=lfieldwidth)
     line_value.insert(0, settings['line_value'])
     line_value.grid(row=0, column=9)
+
+    Label(root, text="Material Tensor Input:").grid(row=0, column=9)
+
+    tensor_frame = Frame(root)
+    tensor_frame.grid(row=1, column=9, rowspan=1, columnspan=1)
+    lfieldwidth = 5
+
+    Label(tensor_frame, text="XX:").grid(row=0, column=0)
+    V_xx = Entry(tensor_frame, width=lfieldwidth)
+    V_xx.insert(0, settings['v_xx'])
+    V_xx.grid(row=0, column=1)
+    Label(tensor_frame, text="XY:").grid(row=0, column=2)
+    V_xy = Entry(tensor_frame, width=lfieldwidth)
+    V_xy.insert(0, settings['v_xy'])
+    V_xy.grid(row=0, column=3)
+    Label(tensor_frame, text="YX:").grid(row=1, column=0)
+    V_yx = Entry(tensor_frame, width=lfieldwidth)
+    V_yx.insert(0, settings['v_yx'])
+    V_yx.grid(row=1, column=1)
+    Label(tensor_frame, text="YY:").grid(row=1, column=2)
+    V_yy = Entry(tensor_frame, width=lfieldwidth)
+    V_yy.insert(0, settings['v_yy'])
+    V_yy.grid(row=1, column=3)
 
     renderingOptions_frame = Frame(root)
     renderingOptions_frame.grid(row=0, column=8, rowspan=8, columnspan=1)

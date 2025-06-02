@@ -29,6 +29,7 @@ def main_simulation():
         Data.setSize(gui.get_width(), gui.get_height(), gui.get_xResolution(), gui.get_yResolution())
         Data.setLine(gui.get_line())
         Data.setBoundary(gui.getLeftBoundaryValue(), gui.getTopBoundaryValue(), gui.getBottomBoundaryValue(), gui.getRightBoundaryValue())
+        Data.setTensor(gui.get_Tensor())
         from mesh.meshgen import meshgen 
         meshgen()
         from calculation.calculate import calculate

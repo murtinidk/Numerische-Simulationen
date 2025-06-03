@@ -35,6 +35,11 @@ DEFAULTS = {
     'rightBoundaryValue': '0',
     'bottomBoundaryValue': '0',
     'leftBoundaryValue': '0',
+    #material tensor
+    'v_xx': '1',
+    'v_xy': '0',
+    'v_yx': '0',
+    'v_yy': '1',
     
     #debug options
     'options_renderAnything': '1',
@@ -190,17 +195,32 @@ def getLeftBoundaryType():
         raise Exception("LeftboundaryType not a valid boundary input")
 
 def getLeftBoundaryValue():
-    try:
-        value_str = left_value.get()
-        if not value_str:
-            raise ValueError
+    if getLeftBoundaryType() == 'none':
+        return None
+    elif getLeftBoundaryType() == 'dirichlet':
         try:
-            value = float(value_str)
-        except:
-            value = createFunktion(value_str)
-        return value
-    except ValueError:
-        raise Exception("Leftboundary not a valid boundary value input")
+            value_str = left_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except:
+                value = createFunktion(value_str)
+            return value
+        except ValueError:
+            raise Exception("Dirichlet left-boundary not a valid boundary value input")
+    elif getLeftBoundaryType() == 'neumann':
+        try:
+            value_str = left_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except ValueError:
+                raise Exception("Neumann left-boundary can only be a constant")
+            return value
+        except ValueError:
+            raise Exception("Neumann left-boundary not a valid boundary value input")
     
 
 def getRightBoundaryType():
@@ -210,17 +230,33 @@ def getRightBoundaryType():
         raise Exception("RightboundaryType not a valid boundary input")
 
 def getRightBoundaryValue():
-    try:
-        value_str = right_value.get()
-        if not value_str:
-            raise ValueError
+    if getRightBoundaryType() == 'none':
+        return None
+    elif getRightBoundaryType() == 'dirichlet':
         try:
-            value = float(value_str)
-        except:
-            value = createFunktion(value_str)
-        return value
-    except ValueError:
-        raise Exception("Rightboundary not a valid boundary value input")
+            value_str = right_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except:
+                value = createFunktion(value_str)
+            return value
+        except ValueError:
+            raise Exception("Dirichlet right-boundary not a valid boundary value input")
+    elif getRightBoundaryType() == 'neumann':
+        try:
+            value_str = right_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except ValueError:
+                raise Exception("Neumann right-boundary can only be a constant")
+            return value
+        except ValueError:
+            raise Exception("Neumann right-boundary not a valid boundary value input")
+
 
 def getTopBoundaryType():
     try:
@@ -229,17 +265,32 @@ def getTopBoundaryType():
         raise Exception("TopboundaryType not a valid boundary input")
 
 def getTopBoundaryValue():
-    try:
-        value_str = top_value.get()
-        if not value_str:
-            raise ValueError
+    if getTopBoundaryType() == 'none':
+        return None
+    elif getTopBoundaryType() == 'dirichlet':
         try:
-            value = float(value_str)
-        except:
-            value = createFunktion(value_str)
-        return value
-    except ValueError:
-        raise Exception("Topboundary not a valid boundary value input")
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except:
+                value = createFunktion(value_str)
+            return value
+        except ValueError:
+            raise Exception("Dirichlet top-boundary not a valid boundary value input")
+    elif getTopBoundaryType() == 'neumann':
+        try:
+            value_str = top_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except ValueError:
+                raise Exception("Neumann top-boundary can only be a constant")
+            return value
+        except ValueError:
+            raise Exception("Neumann top-boundary not a valid boundary value input")
 
 def getBottomBoundaryType():
     try:
@@ -248,17 +299,32 @@ def getBottomBoundaryType():
         raise Exception("BottomboundaryType not a valid boundary input")
 
 def getBottomBoundaryValue():
-    try:
-        value_str = bottom_value.get()
-        if not value_str:
-            raise ValueError
+    if getBottomBoundaryType() == 'none':
+        return None
+    elif getBottomBoundaryType() == 'dirichlet':
         try:
-            value = float(value_str)
-        except:
-            value = createFunktion(value_str)
-        return value
-    except ValueError:
-        raise Exception("Bottomboundary not a valid boundary value input")
+            value_str = bottom_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except:
+                value = createFunktion(value_str)
+            return value
+        except ValueError:
+            raise Exception("Dirichlet bottom-boundary not a valid boundary value input")
+    elif getBottomBoundaryType() == 'neumann':
+        try:
+            value_str = bottom_value.get()
+            if not value_str:
+                raise ValueError
+            try:
+                value = float(value_str)
+            except ValueError:
+                raise Exception("Neumann bottom-boundary can only be a constant")
+            return value
+        except ValueError:
+            raise Exception("Neumann bottom-boundary not a valid boundary value input")
 
 
 
@@ -282,11 +348,23 @@ def get_line():
     if x1 <= 0 or x2 <= 0 or y1 <= 0 or y2 <= 0 or x1 >= x or x2 >= x or y1 >= y or y2 >= y:
         raise ValueError
     return np.array([x1,y1,x2,y2, value])
+
+def get_Tensor():
+    try:
+        xx = float(V_xx.get())
+        xy = float(V_xy.get())
+        yx = float(V_yx.get())
+        yy = float(V_yy.get())
+    except ValueError:
+        raise Exception("Not a valid material tensor format!")
+        return
+    return np.array([[xx, xy], [yx, yy]])
     
 def create():
     global width, height, boundary_conditions_str, xResolution, yResolution, meshHeight, meshWidth, meshCanvas , config_path, step_text, root, temperatureCanvas
     global X1, Y1, X2, Y2, line_frame, line_value, line_type
     global top_value, top_boundary, right_value, right_boundary, bottom_boundary, bottom_value, left_boundary, left_value
+    global V_xx, V_xy, V_yx, V_yy
     #default config path
     global config_path
     config_path = "settings.conf"
@@ -419,6 +497,29 @@ def create():
     line_value = Entry(line_frame, width=lfieldwidth)
     line_value.insert(0, settings['line_value'])
     line_value.grid(row=0, column=9)
+
+    Label(root, text="Material Tensor Input:").grid(row=0, column=9)
+
+    tensor_frame = Frame(root)
+    tensor_frame.grid(row=1, column=9, rowspan=1, columnspan=1)
+    lfieldwidth = 5
+
+    Label(tensor_frame, text="XX:").grid(row=0, column=0)
+    V_xx = Entry(tensor_frame, width=lfieldwidth)
+    V_xx.insert(0, settings['v_xx'])
+    V_xx.grid(row=0, column=1)
+    Label(tensor_frame, text="XY:").grid(row=0, column=2)
+    V_xy = Entry(tensor_frame, width=lfieldwidth)
+    V_xy.insert(0, settings['v_xy'])
+    V_xy.grid(row=0, column=3)
+    Label(tensor_frame, text="YX:").grid(row=1, column=0)
+    V_yx = Entry(tensor_frame, width=lfieldwidth)
+    V_yx.insert(0, settings['v_yx'])
+    V_yx.grid(row=1, column=1)
+    Label(tensor_frame, text="YY:").grid(row=1, column=2)
+    V_yy = Entry(tensor_frame, width=lfieldwidth)
+    V_yy.insert(0, settings['v_yy'])
+    V_yy.grid(row=1, column=3)
 
     renderingOptions_frame = Frame(root)
     renderingOptions_frame.grid(row=0, column=8, rowspan=8, columnspan=1)
@@ -731,12 +832,22 @@ def drawNode(node):
             meshCanvas.create_text(x - nodeRadius, y - nodeRadius, text= EN, fill="black", font="Arial 8", anchor=SE, width=90)
 
     if(debugSettings[debugOptions.writeValues].get()):
+        text = ""
         if(not node.GetResult() is None):
             text = "Result:" + f"{node.GetResult():.3f}"
         elif(not node.GetDirichletBoundary() is None):
             text = "Dirichlet:" + f"{node.GetDirichletBoundary():.3f}"
         else:
             text = "Result: None"
+        #meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= text, fill="black", font="Arial 8", anchor=NW, width=70)
+        #add line if there are neumann conditions set
+        #belowVonNeumannBoundary rightVonNeumannBoundary
+        if(node.GetRightVonNeumannBoundary() is not None or node.GetBelowVonNeumannBoundary() is not None):
+            text += "\nNeumann: "
+            if(node.GetRightVonNeumannBoundary() is not None):
+                text += "R:" + f"{node.GetRightVonNeumannBoundary():.3f} "
+            if(node.GetBelowVonNeumannBoundary() is not None):
+                text += "B:" + f"{node.GetBelowVonNeumannBoundary():.3f} "
         meshCanvas.create_text(x + nodeRadius, y + nodeRadius, text= text, fill="black", font="Arial 8", anchor=NW, width=70)
 
 def drawLine(line):

@@ -33,7 +33,7 @@ def meshgen():
     gui.setStep(gui.simStep.boundaryConditions)
     line = Data.getLine()
     if line is not None:
-        calculateNearestNode(mesh, line, combinations)
+        calculateLineValues(mesh, line, combinations)
 
     #TODO add boundary conditioins here
     '''def createBoundaryArray(getType, length, floatValue):
@@ -46,7 +46,7 @@ def meshgen():
                 return np.full(length, floatValue)
             else:
                 raise Exception(floatValue + "is not a number")'''
-    applyDirichletBoundaryConditions(mesh, width, height,xResolution, yResolution,{
+    applyBoundaryConditions(mesh,xResolution,{
         "top":    createBoundaryArray(width, xResolution, Data.getTop()),
         "bottom": createBoundaryArray(width, xResolution, Data.getBottom()),
         "left":   createBoundaryArray(height, yResolution, Data.getLeft()),
@@ -102,107 +102,199 @@ def createBoundaryArray(length, res, boundary_func):
         return np.full(res, boundary_func)
 
 
-def calculateNearestNode(mesh, line, combinations):
-    resolution = 100
-    nodes_del_edge = removeEdgeNodes(combinations)
+def calculateLineValues(mesh, line, combinations):
+    width = Data.getWidth()
+    height = Data.getHeight() 
+    xRes = Data.getXResolution()
+    yRes = Data.getYResolution()
+    resolution = 100*int((xRes+yRes)/2)
+    xIntervall = width/(xRes-1)
+    yIntervall = height/(yRes-1)
     xs = np.linspace(line[0], line[2], resolution)
     ys = np. linspace(line[1], line[3], resolution)
     line_coords = np.column_stack((xs, ys))
-    tree = BallTree(nodes_del_edge[:, 1:3], leaf_size=1, metric='euclidean')
-    dist, index = tree.query(line_coords, 1, return_distance=True)
-    node_id_array = []
-    node_dist_array = []
-    for i in range(len(index)):
-        node_id_array.append(nodes_del_edge[index[i],0])
-        node_dist_array.append(dist[i])
-    node_id_dist = np.column_stack((np.array(node_id_array, dtype=int), np.array(node_dist_array)))
-    calculateLineFunc(line, node_id_array,node_id_dist,resolution,mesh)
-    
+    ds = np.sqrt((line[0]- line[2])**2 + (line[1]-line[3])**2)/resolution
+    e = 1e-20
+    for i in line_coords:
+        node_TL_ind = int(np.floor(i[1]/yIntervall)*xRes + np.floor(i[0]/xIntervall))
+        node_TR_ind = int(np.floor(i[1]/yIntervall)*xRes + np.ceil(i[0]/xIntervall))
+        node_BL_ind = int(np.ceil(i[1]/yIntervall)*xRes + np.floor(i[0]/xIntervall))
+        node_BR_ind = int(np.ceil(i[1]/yIntervall)*xRes + np.ceil(i[0]/xIntervall))
 
-def calculateLineFunc(line, node_id_array,node_id_dist,resolution,mesh):
-    unique_node_ids = np.unique(np.array(node_id_array, dtype=int))
-    for i in unique_node_ids:
+        node_TL_coords = combinations[node_TL_ind]
+        node_TR_coords = combinations[node_TR_ind]
+        node_BL_coords = combinations[node_BL_ind]
+        node_BR_coords = combinations[node_BR_ind]
+
+        dist_TL = np.sqrt((i[0]-node_TL_coords[1])**2+(i[1]-node_TL_coords[2])**2)+e
+        dist_TR = np.sqrt((i[0]-node_TR_coords[1])**2+(i[1]-node_TR_coords[2])**2)+e
+        dist_BL = np.sqrt((i[0]-node_BL_coords[1])**2+(i[1]-node_BL_coords[2])**2)+e
+        dist_BR = np.sqrt((i[0]-node_BR_coords[1])**2+(i[1]-node_BR_coords[2])**2)+e
+
         if callable(line[4]):
-            spec_dist = node_id_dist[node_id_dist[:, 0 ] == i, 1]
-            min_id = np.argmin(spec_dist)
-            #find original id in array
-            indices_node = np.where(node_id_dist[:,0] == i)[0]
-            org_id = indices_node[min_id]
-            #calulate the function value normal from line to node
-            func_value = line[4](np.sqrt((abs(line[2]-line[0])/resolution*org_id)**2+(abs(line[3]-line[1])/resolution*org_id)**2))
-            mesh[i].SetDirichletBoundary(func_value)
+            func_value = line[4](np.sqrt((i[0]-line_coords[0,[0]])**2+(i[1]-line_coords[0,[1]])**2))
         else:
-            mesh[i].SetDirichletBoundary(line[4])
+            func_value = line[4]
+        weight = 1/dist_TL + 1/dist_TR + 1/dist_BL + 1/dist_BR
 
-def applyDirichletBoundaryConditions(nodes, width, height, xres, yres, dirichlet_arrays):
-    if dirichlet_arrays is None or len(dirichlet_arrays) != 4:
-        raise Exception("dirichlet arrays not correctly initialized")
+        weight_TL = 1/dist_TL/weight
+        weight_TR = 1/dist_TR/weight
+        weight_BL = 1/dist_BL/weight
+        weight_BR = 1/dist_BR/weight
+
+        mesh[node_TL_ind].SetLineAddition(float(func_value*weight_TL*ds))
+        mesh[node_TR_ind].SetLineAddition(float(func_value*weight_TR*ds))
+        mesh[node_BL_ind].SetLineAddition(float(func_value*weight_BL*ds))
+        mesh[node_BR_ind].SetLineAddition(float(func_value*weight_BR*ds))
+        
+
     
-    #calculate the corner node ids
-    TL = 0
-    TR = xres-1
-    BL = len(nodes)-xres
-    BR = len(nodes)-1
-    
-    #calculate the edge node ids excluding corners
-    idx_top = np.arange(TL+1, TR)
-    idx_bottom = np.arange(BL+1, BR)
-    idx_left = np.arange(TL+xres, BL, xres)
-    idx_right = np.arange(TR+xres, BR, xres)
-    
-    #location : type, value array without corners, node ids without corners
-    edges = {
-        "top":    (gui.getTopBoundaryType(), dirichlet_arrays["top"],idx_top),
-        "bottom": (gui.getBottomBoundaryType(), dirichlet_arrays["bottom"],idx_bottom),
-        "left":   (gui.getLeftBoundaryType(), dirichlet_arrays["left"],idx_left),
-        "right":  (gui.getRightBoundaryType(), dirichlet_arrays["right"],idx_right)
+
+
+
+
+#Function to get edge and node ids, assuming a rectangular grid with TL = 0,0 , and BR -> last node
+#returns corner node ids in a dict
+def getCornerNodeIds(num_nodes:int, xres:int) -> dict:
+    return {
+        "TL" : 0,
+        "TR" : xres-1,
+        "BL" : num_nodes-xres,
+        "BR" : num_nodes-1
     }
-    #print(edges)
+
+#generates edge node ids in a dict, excluding corners
+def getEdgeNodeIds(corners:dict,xres:int) -> dict:
+    return {
+        "top"    :    np.arange(corners["TL"]+1, corners["TR"]),
+        "bottom" :    np.arange(corners["BL"]+1, corners["BR"]),
+        "left"   :    np.arange(corners["TL"]+xres, corners["BL"], xres),
+        "right"  :    np.arange(corners["TR"]+xres, corners["BR"], xres)
+    }
+
+
+'''
+---------------------- Dirichlet Corner intersection logic ----------------------------------
+function that averages dirichlet values of neighboring nodes, ignores none values, example:
+(T) ... Target node with intersection, averages values of non-None neighboring nodes
+(L,R,T,B) ... Neighboring nodes
+
+    (T) 
+(L) (T) (R)
+    (B) 
+
+-> if for example only (L) is set, it returns the value of (L) 
+-> if (L) and (R) are set, it returns the average of (L) and (R)
+-> for example BR corner, if (L) and (T) are none returns None   
+'''
+def getDirichletCornerValue(target_idx:int, nodes, xres:int) -> float:
+ 
     
-    #check array lengths
+    neighbor_indexes = getNeighboringIndexes(target_idx, xres, nodes)
+
+    neighbor_values = []
+    
+    for index in neighbor_indexes:
+        if index >= 0 and index < len(nodes):                   #check bounds, skip if out of bounds
+            value = nodes[index].GetDirichletBoundary()         #get the dirichlet value of the neighbor node
+            if value is not None:                               #ignore None values
+                neighbor_values.append(value)                   #add to the list if not None
+    if len(neighbor_values) > 0:                     
+        # if one -> return the value (sum = value, len = 1)
+        # if more than one (should be 2)-> return the average
+        return sum(neighbor_values) / len(neighbor_values)
+    else:
+        return None                                             #for example no edges from corner set, return None 
+
+'''
+returns indexes of neighboring nodes, as defined in function above 
+-> since mesh is 1d array, check if truly a neighbor using (x,y)-coords
+'''
+def getNeighboringIndexes(target_idx:int, xres:int, nodes):
+    target_x, target_y = nodes[target_idx].GetX(), nodes[target_idx].GetY()
+    #use array of dict to define neighbors, with offset and expected coordinate
+    #example: left neighbor has offset -1, and must have the same y-coordinate as target node
+    neighbor_definitions = [
+        {"offset": -1,   "coord": lambda node: node.GetY(), "expected_coord": target_y},  #left
+        {"offset": +1,   "coord": lambda node: node.GetY(), "expected_coord": target_y},  #right
+        {"offset": -xres,"coord": lambda node: node.GetX(), "expected_coord": target_x},  #top
+        {"offset": +xres,"coord": lambda node: node.GetX(), "expected_coord": target_x}   #bottom
+    ]
+
+    neighbor_indexes = []
+    for definition in neighbor_definitions:
+        potential_idx = target_idx + definition["offset"]
+        if isInBounds(potential_idx, nodes):
+            potential_neighbor_node = nodes[potential_idx]
+            #check if potential idx matches the expected coordinate (float comparison)
+            if np.isclose(definition["coord"](potential_neighbor_node), definition["expected_coord"]):
+                neighbor_indexes.append(potential_idx)
+                
+    return neighbor_indexes
+
+#checks if index is in bounds of mesh indexes
+def isInBounds(index:int, nodes) -> bool:
+    num_nodes = len(nodes)
+    #check if index is within bounds of the mesh
+    return index >= 0 and index < num_nodes
+
+#function to apply boundary conditions to mesh. expects a dict with values for each edge.
+#skips None-Values in arrays, or if boundary condition not set.
+def applyBoundaryConditions(mesh,xres:int, value_arrays:dict) -> None:
+    if value_arrays is None or len(value_arrays) != 4:
+        raise Exception("edge value arrays not correctly initialized")
+    corner_idxs_dict = getCornerNodeIds(len(mesh), xres)
+    edge_idxs_dict = getEdgeNodeIds(corner_idxs_dict, xres)
+    #create edge dict: location : type, value array with corners, node ids without corners
+    edges = {
+        "top":    (gui.getTopBoundaryType(), value_arrays["top"], edge_idxs_dict["top"]),
+        "bottom": (gui.getBottomBoundaryType(), value_arrays["bottom"], edge_idxs_dict["bottom"]),
+        "left":   (gui.getLeftBoundaryType(), value_arrays["left"], edge_idxs_dict["left"]),
+        "right":  (gui.getRightBoundaryType(), value_arrays["right"], edge_idxs_dict["right"])
+    }
+    #apply the edge values, excluding corners
     for edge in edges:
-        edge_type, dirichlet_array, idx = edges[edge]
-        if len(idx)+2 != len(dirichlet_array):
-            raise Exception(edge + "edge array not of correct length")
-    
-    
-    #apply edge values
-    for edge in edges:
-        edge_type, dirichlet_array, idx = edges[edge]
+        edge_type, value_array, edge_indexes = edges[edge]
         if edge_type == "dirichlet":
             #apply dirichlet values
-            for i, node_id in enumerate(idx):
-                #+1 to skip first value in the array -> corner value
-                if dirichlet_array[i+1] is not None:
-                    nodes[node_id].SetDirichletBoundary(dirichlet_array[i+1])
-              
-    #apply corner values
-    #check corner intersection -> avg val of neighboring nodes
-    corners_values = {
-        "TL": (TL,  dirichlet_arrays["top"][0], dirichlet_arrays["left"][0]),
-        "TR": (TR,  dirichlet_arrays["top"][-1], dirichlet_arrays["right"][0]),
-        "BL": (BL,  dirichlet_arrays["bottom"][0], dirichlet_arrays["left"][-1]),
-        "BR": (BR,  dirichlet_arrays["bottom"][-1], dirichlet_arrays["right"][-1])
-    }
-    corners_neighbors_values = {
-        "TL": (nodes[TL+1].GetDirichletBoundary(), nodes[TL+xres].GetDirichletBoundary()),
-        "TR": (nodes[TR-1].GetDirichletBoundary(), nodes[TR+xres].GetDirichletBoundary()),
-        "BL": (nodes[BL+1].GetDirichletBoundary(), nodes[BL-xres].GetDirichletBoundary()),
-        "BR": (nodes[BR-1].GetDirichletBoundary(), nodes[BR-xres].GetDirichletBoundary())
-    }
-    #print(corners_values)
-    #print(corners_neighbors_values)
-    for corner in corners_values:
-        idx, valA, valB = corners_values[corner]
-        neighborA, neighborB = corners_neighbors_values[corner]
-        #average: both neighbors are set, two corner values are set
-        if neighborA != None and neighborB != None and valA != None and valB != None:
-            nodes[idx].SetDirichletBoundary((neighborA + neighborB) / 2)
-        # elif valA != None:
-        #     nodes[idx].SetDirichletBoundary(valA)
-        # elif valB != None:
-        #     nodes[idx].SetDirichletBoundary(valB)
-        #TODO: needs to be reworked
+            #value_array[0] is for corner, value_array[1] for the first edge node
+            for i, node_mesh_idx in enumerate(edge_indexes):
+                value_for_node = value_array[i+1]
+                if value_for_node is not None:
+                    mesh[node_mesh_idx].SetDirichletBoundary(value_for_node)
+        if edge_type == "neumann":
+            print(value_arrays[edge])
+            #TODO: duplicate code -> put into dict 
+            if edge == "top" or edge == "bottom":
+                #apply neumann values to right von Neumann boundary
+                for i, node_mesh_idx in enumerate(edge_indexes):
+                    value_for_node = value_array[i+1]
+                    if value_for_node is not None:
+                        mesh[node_mesh_idx].SetRightVonNeumannBoundary(value_for_node)
+            if edge == "left" or edge == "right":
+                #apply neumann values to right von Neumann boundary
+                for i, node_mesh_idx in enumerate(edge_indexes):
+                    value_for_node = value_array[i+1]
+                    if value_for_node is not None:
+                        mesh[node_mesh_idx].SetBelowVonNeumannBoundary(value_for_node)
+            else:
+                print("Neumann boundary not implemented yet:"+ edge + " edge application skipped")
+    
+    #apply corner logic
+
+    #dirichlet corner logic application
+    for corner in corner_idxs_dict:
+        corner_idx = corner_idxs_dict[corner]
+        value = getDirichletCornerValue(corner_idx, mesh, xres)
+        if value is not None:
+            mesh[corner_idx].SetDirichletBoundary(value)
+        else:
+            print("No dirichlet value intersection for corner " + corner + ", skipping")
+    #neumann corner logic application
+    #TODO implement neumann 
+    return
+
+
     
 
 def removeEdgeNodes(nodes):

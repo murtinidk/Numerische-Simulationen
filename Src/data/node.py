@@ -17,6 +17,13 @@ class Node:
         #if self.realY == 1:
         #    self.dirichletBoundary = 2
         self.result = None
+        self.lineAddition = 0
+
+    def SetLineAddition(self, additon: float):
+        self.lineAddition += additon
+    
+    def GetLineAddition(self):
+        return self.lineAddition
 
     def SetResult(self, result: float):
         assert self.result is None, "Can't set result: already set"

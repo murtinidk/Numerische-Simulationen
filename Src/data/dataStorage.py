@@ -32,6 +32,7 @@ class DataClass:
         self.JacobianInverseTransposeMap = dict()
         self.elementMatrixMap = dict()
         self.hasResult = False
+        self.hasTensor = False
 
 
         
@@ -151,6 +152,18 @@ class DataClass:
             raise Exception("Mesh not set!")
         return self.mesh
     
+    def setTensor(self, tensor):
+        if(self.hasTensor):
+            raise Exception("Material tensor already set!")
+        self.tensor = tensor
+        self.hasTensor = True
+    def hasTensor(self):
+        return self.hasTensor
+    def getTensor(self):
+        if(not self.hasTensor):
+            raise Exception("Material Tensor not set!")
+        return self.tensor
+    
     #Knotengleichungsarray in:"Globale Knotennummer" out:"Gleichungs id"
     def setNE(self, NE) -> None:
         if(self.hasNE):
@@ -262,9 +275,6 @@ class DataClass:
             connec_plot[element, 1] = self.getIENof(3, element)
             connec_plot[element, 2] = self.getIENof(0, element)
             connec_plot[element, 3] = self.getIENof(1, element)
-        print(connec_plot)
-        print(U)
-        print(self.getElementMatrixMap())
         #create instance of writer class
         writer = CFSwriter.EXPORT(
                 nodesPerEl=nodesPerEl,

@@ -951,16 +951,12 @@ def resizeTempscale(event):
         temperatureCanvas.delete("all")
                 
 def getColorFromValue(value, minValue, valueRange):
-    hottness = (value - minValue) / valueRange #should be from 0 to 1
-    # sometimes it is not. clamp it ... I don't think it is, i was never able to find a case
-    #hottness = max(0, min(1, hottness))
-    #various tests for adjusting the color gradient
-    #hottness = 1/(1 + np.exp(-(hottness - 0.5) * 12))*0.3 + hottness * 0.7
-    #hottness = np.tanh((hottness -0.5 ) * 4)/2 + 0.5
-    r = int(hottness**1.5 * 192) + 63
-    b = int((1 - hottness)**1.5 * 192) + 63
-    #g = max(63, int((1/((r/255.) * (b/255.)))*255))
-    g = int(-(((hottness+1)/2)**2 - 1) * 255)
+    hottness = (value - minValue) / valueRange 
+    assert hottness >= 0 and hottness <= 1, "hottness out of range"
+    r = int(hottness**0.8 * 192) + 63
+    b = int((1 - hottness)**0.8 * 192) + 63
+    g = int(-298*hottness**2 + 298*hottness+63)
+    g = 63
     color = "#%02x%02x%02x" % (r, g, b)
     return color
     

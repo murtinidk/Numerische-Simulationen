@@ -955,7 +955,6 @@ def getColorFromValue(value, minValue, valueRange):
     assert hottness >= 0 and hottness <= 1, "hottness out of range"
     r = int(hottness**0.8 * 192) + 63
     b = int((1 - hottness)**0.8 * 192) + 63
-    g = int(-298*hottness**2 + 298*hottness+63)
     g = 63
     color = "#%02x%02x%02x" % (r, g, b)
     return color

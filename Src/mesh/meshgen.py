@@ -190,15 +190,15 @@ function that averages dirichlet values of neighboring nodes, ignores none value
 def getDirichletCornerValue(target_idx:int, nodes, xres:int) -> float:
  
     
-    neighbor_indexes = getNeighboringIndexes(target_idx, xres, nodes)
+    neighbor_indexes_dict = getNeighboringIndexes(target_idx, xres, nodes)
 
     neighbor_values = []
     
-    for index in neighbor_indexes:
-        if index >= 0 and index < len(nodes):                   #check bounds, skip if out of bounds
-            value = nodes[index].GetDirichletBoundary()         #get the dirichlet value of the neighbor node
-            if value is not None:                               #ignore None values
-                neighbor_values.append(value)                   #add to the list if not None
+    for neighbor_key in neighbor_indexes_dict:
+        index = neighbor_indexes_dict[neighbor_key]         #isInBounds check already in getNeighboringIndexes -> only valid indexes
+        value = nodes[index].GetDirichletBoundary()         #get the dirichlet value of the neighbor node
+        if value is not None:                               #ignore None values
+            neighbor_values.append(value)                   #add to the list if not None
     if len(neighbor_values) > 0:                     
         # if one -> return the value (sum = value, len = 1)
         # if more than one (should be 2)-> return the average
@@ -226,15 +226,16 @@ def getNeighboringIndexes(target_idx:int, xres:int, nodes):
         "top":    {"offset": -xres,"coord": lambda node: node.GetX(), "expected_coord": target_x},  #top
         "bottom": {"offset": +xres,"coord": lambda node: node.GetX(), "expected_coord": target_x}   #bottom
     }
-    neighbor_indexes = []
-    for definition in neighbor_definition_dict:
-        potential_idx = target_idx + neighbor_definition_dict[definition]["offset"]
+    neighbor_indexes = {} #empty dict
+    for definition_key in neighbor_definition_dict:
+        definition_dict = neighbor_definition_dict[definition_key]
+        potential_idx = target_idx + definition_dict["offset"]
         if isInBounds(potential_idx, nodes):
             potential_neighbor_node = nodes[potential_idx]
             #check if potential idx matches the expected coordinate (float comparison)
-            if  np.isclose(neighbor_definition_dict[definition]["expected_coord"],
-                            neighbor_definition_dict[definition]["coord"]):
-                neighbor_indexes.append(potential_idx)
+            if  np.isclose(definition_dict["expected_coord"],
+                            definition_dict["coord"](potential_neighbor_node)):
+                neighbor_indexes[definition_key] = potential_idx
                 
     return neighbor_indexes
 
@@ -297,7 +298,12 @@ def applyBoundaryConditions(mesh,xres:int, value_arrays:dict) -> None:
         else:
             print("No dirichlet value intersection for corner " + corner + ", skipping")
     #neumann corner logic application
-    #TODO implement neumann 
+    for corner in corner_idxs_dict:
+        corner_idx = corner_idxs_dict[corner]
+        if(mesh[corner_idx].GetDirichletBoundary() != None):
+            continue
+        print("CORNER: " + corner + " with index " + str(corner_idx))
+        neumannCornerLogic(corner_idx, mesh, xres) 
     return
 
 
@@ -310,9 +316,19 @@ Assumes preprocessed mesh state:
         in wich case nothing is done 
 '''
 def neumannCornerLogic(target_corner_idx:int, mesh, xres:int) -> None:
-    neighbor_idxs = getNeighboringIndexes(target_corner_idx,xres,mesh)
+    neighbors = getNeighboringIndexes(target_corner_idx,xres,mesh)
+    print(neighbors)
+    #check if corner has a neumann boundary set, depending on direction of neighbor 
+    neighbor_funcs = {
+        "right":  lambda: (mesh[neighbors["right"]].GetRightVonNeumannBoundary(),  mesh[target_corner_idx].SetRightVonNeumannBoundary),
+        "bottom": lambda: (mesh[neighbors["bottom"]].GetBelowVonNeumannBoundary(), mesh[target_corner_idx].SetBelowVonNeumannBoundary)
+    }
     
-    
+    for key in neighbor_funcs:
+        if key in neighbors:
+            value, setter = neighbor_funcs[key]()
+            if value is not None:
+                setter(value)
 
 def removeEdgeNodes(nodes):
     xmin = 0

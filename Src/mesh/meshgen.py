@@ -220,14 +220,20 @@ def getNeighboringIndexes(target_idx:int, xres:int, nodes):
         {"offset": -xres,"coord": lambda node: node.GetX(), "expected_coord": target_x},  #top
         {"offset": +xres,"coord": lambda node: node.GetX(), "expected_coord": target_x}   #bottom
     ]
-
+    neighbor_definition_dict = {
+        "left":   {"offset": -1,   "coord": lambda node: node.GetY(), "expected_coord": target_y},  #left
+        "right":  {"offset": +1,   "coord": lambda node: node.GetY(), "expected_coord": target_y},  #right
+        "top":    {"offset": -xres,"coord": lambda node: node.GetX(), "expected_coord": target_x},  #top
+        "bottom": {"offset": +xres,"coord": lambda node: node.GetX(), "expected_coord": target_x}   #bottom
+    }
     neighbor_indexes = []
-    for definition in neighbor_definitions:
-        potential_idx = target_idx + definition["offset"]
+    for definition in neighbor_definition_dict:
+        potential_idx = target_idx + neighbor_definition_dict[definition]["offset"]
         if isInBounds(potential_idx, nodes):
             potential_neighbor_node = nodes[potential_idx]
             #check if potential idx matches the expected coordinate (float comparison)
-            if np.isclose(definition["coord"](potential_neighbor_node), definition["expected_coord"]):
+            if  np.isclose(neighbor_definition_dict[definition]["expected_coord"],
+                            neighbor_definition_dict[definition]["coord"]):
                 neighbor_indexes.append(potential_idx)
                 
     return neighbor_indexes
@@ -295,6 +301,17 @@ def applyBoundaryConditions(mesh,xres:int, value_arrays:dict) -> None:
     return
 
 
+'''
+-------------------Neumann Corner Logic-------------------
+Assumes preprocessed mesh state: 
+    !-neumann boundaries applied to the domain edges
+    !-dirichlet logic already applied to corners -> 
+        -> corners can already have dirichlet values (one of 2 intersecting edges or avg val),
+        in wich case nothing is done 
+'''
+def neumannCornerLogic(target_corner_idx:int, mesh, xres:int) -> None:
+    neighbor_idxs = getNeighboringIndexes(target_corner_idx,xres,mesh)
+    
     
 
 def removeEdgeNodes(nodes):

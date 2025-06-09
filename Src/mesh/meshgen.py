@@ -313,7 +313,7 @@ Assumes preprocessed mesh state:
     !-neumann boundaries applied to the domain edges
     !-dirichlet logic already applied to corners -> 
         -> corners can already have dirichlet values (one of 2 intersecting edges or avg val),
-        in wich case nothing is done 
+        in wich case nothing is done -> handled in function above
 '''
 def neumannCornerLogic(target_corner_idx:int, mesh, xres:int) -> None:
     neighbors = getNeighboringIndexes(target_corner_idx,xres,mesh)

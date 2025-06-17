@@ -1,6 +1,5 @@
 import numpy as np
 import calculation.gauss as gauss
-
 # This class does only store references to the nodes, and does not contain any data
 # It is used to calculate the elementmatrix and the elementvector
 class Element:
@@ -96,11 +95,12 @@ class Element:
     return np.dot(NiTerm, np.dot(material_tensor,NjTerm)) * self.GetJacobianDeterminant()
   
   def ElementMatrix(self):
+    from main import Data
     ElementMatrix = []
     for a in range(4):
       K_a = []
       for b in range(4):
-        K_ab = gauss.Integrate2d(lambda xi, eta: self.LhsIntegrationPoint(a, b, xi, eta), n=2)
+        K_ab = gauss.Integrate2d(lambda xi, eta: self.LhsIntegrationPoint(a, b, xi, eta), n=Data.getIntegrationOrder())
         K_a.append(K_ab)
       ElementMatrix.append(K_a)
     return ElementMatrix
@@ -139,13 +139,14 @@ class Element:
              self.GetJacobianDeterminant() * 2
     
   def ElementVector(self, ElementMatrix):
+    from main import Data
     ElementVector = []
     for a in range(4):
       f_a = 0.
 
       #vonNeumann boundary conditions
       for edge in range(4):
-        f_a += gauss.Integrate1d(lambda location: self.RhsIntegrationPoint(a=a, edge=edge, location=location), n=2)
+        f_a += gauss.Integrate1d(lambda location: self.RhsIntegrationPoint(a=a, edge=edge, location=location), n=Data.getIntegrationOrder())
 
       #dirichlet boundary conditions
       if(self.GetNodeTL().GetDirichletBoundary() != None):

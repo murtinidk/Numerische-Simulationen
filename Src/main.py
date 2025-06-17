@@ -30,6 +30,7 @@ def main_simulation():
         Data.setLine(gui.get_line())
         Data.setBoundary(gui.getLeftBoundaryValue(), gui.getTopBoundaryValue(), gui.getBottomBoundaryValue(), gui.getRightBoundaryValue())
         Data.setTensor(gui.get_Tensor())
+        Data.setIntegrationOrder(gui.getIntegrationOrder())
         from mesh.meshgen import meshgen 
         meshgen()
         from calculation.calculate import calculate

@@ -33,7 +33,7 @@ class DataClass:
         self.elementMatrixMap = dict()
         self.hasResult = False
         self.hasTensor = False
-
+        self.integration_order = None
 
         
     def reset(self):
@@ -241,6 +241,13 @@ class DataClass:
     def getHasResult(self) -> bool:
         return self.hasResult
     
+    def setIntegrationOrder(self,order) -> None:
+        self.integration_order = order
+    
+    def getIntegrationOrder(self) -> int:
+        if not (self.integration_order):
+            raise ValueError("Invalid Integration order!")
+        return self.integration_order
     #translates data for h5 export writer, as in interface description for the writer
     # writer.writeResuls writes into workingdir/result.cfs
     def exportCFS(self):

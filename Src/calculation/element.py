@@ -110,14 +110,16 @@ class Element:
     #we will always have to integrate along the two neighbouring edges of the node
     
     vonNeumannBoundary = None
-    if(edge == 0):
+    if(edge == 0 and (a == 0 or a == 1)):
       vonNeumannBoundary = self.GetNodeTL().GetRightVonNeumannBoundary()
-    elif(edge == 1):
+    elif(edge == 1 and (a == 1 or a == 3)):
       vonNeumannBoundary = self.GetNodeTR().GetBelowVonNeumannBoundary()
-    elif(edge == 2):
+    elif(edge == 2 and (a == 0 or a == 2)):
       vonNeumannBoundary = self.GetNodeTL().GetBelowVonNeumannBoundary()
-    elif(edge == 3):
+    elif(edge == 3 and (a == 2 or a == 3)):
       vonNeumannBoundary = self.GetNodeBL().GetRightVonNeumannBoundary()
+    elif(edge >= 0 and edge <= 4):
+      vonNeumannBoundary == None
     else:
       raise ValueError("Edge not in range(4)")
     
@@ -129,12 +131,12 @@ class Element:
 
     if(edge == 0 or edge == 3):
       return self.LocHutFx(a=a, xi=location) * \
-             vonNeumannBoundary * \
-             self.GetJacobianDeterminant()
+             vonNeumannBoundary / self.hX * \
+             self.GetJacobianDeterminant() / 5
     elif(edge == 1 or edge == 2):
       return self.LocHutFy(a=a, eta=location) * \
-             vonNeumannBoundary * \
-             self.GetJacobianDeterminant()
+             vonNeumannBoundary / self.hY * \
+             self.GetJacobianDeterminant() / 5
     
   def ElementVector(self, ElementMatrix):
     ElementVector = []

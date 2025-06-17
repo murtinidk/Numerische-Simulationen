@@ -40,7 +40,8 @@ DEFAULTS = {
     'v_xy': '0',
     'v_yx': '0',
     'v_yy': '1',
-    
+    # integration order
+    'integration_order': '2',
     #debug options
     'options_renderAnything': '1',
     'options_drawID': '0',
@@ -146,6 +147,13 @@ def save_settings(vals, path=None):
         messagebox.showinfo("Save Settings", f"Settings saved to {file_to_save}")
     except Exception as e:
         messagebox.showerror("Save Error", f"Failed to save settings:\n{e}")
+
+
+def getIntegrationOrder():
+    try:
+        return int(integration_order.get())
+    except ValueError:
+        raise Exception("Integration order input invalid!")
 
 def get_width():
     try:
@@ -365,6 +373,7 @@ def create():
     global X1, Y1, X2, Y2, line_frame, line_value, line_type
     global top_value, top_boundary, right_value, right_boundary, bottom_boundary, bottom_value, left_boundary, left_value
     global V_xx, V_xy, V_yx, V_yy
+    global integration_order
     #default config path
     global config_path
     config_path = "settings.conf"
@@ -530,6 +539,18 @@ def create():
         debugButton = Checkbutton(renderingOptions_frame, variable=debugSettings[option], command=updateGui)
         debugButton.grid(row=i, column=1)
 
+    #order of integration / magnitude? button
+    
+    Label(root, text="Order of Integration:").grid(row=5, column=9)
+
+    
+
+    #Label(tensor_frame, text="XX:").grid(row=0, column=0)
+    integration_order = Entry(root)
+    integration_order.insert(0, settings['integration_order'])
+    integration_order.grid(row=6, column=9)
+    
+    
     #start button
     #from main import main_simulation 
     #start_button = Button(root, text="Start", command=main_simulation)
@@ -573,6 +594,7 @@ def create():
         debugSettings[debugOptions.drawValues].set(int(vals['options_drawValues']))
         debugSettings[debugOptions.writeValues].set(int(vals['options_writeValues']))
         debugSettings[debugOptions.drawOnFinish].set(int(vals['options_drawOnFinish']))
+        integration_order.delete(0,END); integration_order.insert(0,vals['integration_order'])
         
     #save settings button
     def save_setting_button():
@@ -595,6 +617,7 @@ def create():
             'line_x2': X2.get(),
             'line_y2': Y2.get(),
             'line_value': line_value.get(),
+            'integration_order' : integration_order.get(),
             'options_renderAnything': str(debugSettings[debugOptions.renderAnything].get()),
             'options_drawID': str(debugSettings[debugOptions.drawID].get()),
             'options_drawEQ': str(debugSettings[debugOptions.drawEQ].get()),

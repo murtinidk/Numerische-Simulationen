@@ -132,11 +132,11 @@ class Element:
     if(edge == 0 or edge == 3):
       return self.LocHutFx(a=a, xi=location) * \
              vonNeumannBoundary / self.hX * \
-             self.GetJacobianDeterminant() / 5
+             self.GetJacobianDeterminant() * 2
     elif(edge == 1 or edge == 2):
       return self.LocHutFy(a=a, eta=location) * \
              vonNeumannBoundary / self.hY * \
-             self.GetJacobianDeterminant() / 5
+             self.GetJacobianDeterminant() * 2
     
   def ElementVector(self, ElementMatrix):
     ElementVector = []

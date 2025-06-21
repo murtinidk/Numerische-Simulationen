@@ -41,11 +41,17 @@ class Node:
             return self.dirichletBoundary
 
     def SetDirichletBoundary(self, Boundary: float):
-        assert self.dirichletBoundary is None, "Can't set dirichlet: already set"
+        #assert self.dirichletBoundary is None, "Can't set dirichlet: already set"
         #assert self.vonNeumannBoundary is None, "Can't set dirichlet: vonNeumann is already set"
         #node has no vonNeumannBoundary attribute
         self.dirichletBoundary = Boundary
 
+    #updates the value: averages old and new given value, used e.g for corner boundary intersections
+    def UpdateDirichletBoundary(self, Boundary:float):
+        current = self.dirichletBoundary
+        self.dirichletBoundary = (current + Boundary) / 2
+        print("Multiple dirichlet values for node " + str(self.index)+ ",averaged")
+        
     def GetDirichletBoundary(self):
         return self.dirichletBoundary
 

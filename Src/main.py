@@ -16,7 +16,7 @@
 import interface.gui as gui
 import data.dataStorage as data
 from tkinter import messagebox
-
+import traceback
 # initialize the data storage
 Data: data.DataClass = data.DataClass()
 # declarations
@@ -37,6 +37,7 @@ def main_simulation():
         calculate()
     except Exception as e:
         messagebox.showerror("Unresolved Error in Simulation", f"There was an uncaught Exception:\n{e}")
+        traceback.print_exception(e)        
         return
 
     gui.setStep(gui.simStep.finished)

@@ -171,18 +171,20 @@ def get_boundary_condition():
     return boundary_conditions_str.get()
 
 def get_xResolution():
-    assert(int(xResolution.get()) > 1)
     try:
-        return int(xResolution.get())
-    except ValueError:
-        raise Exception("Width Resolution input not valid")
-
+        xres = int(xResolution.get())
+    except Exception:
+        raise ValueError("Width Resolution Input is Invalid!")
+    assert(xres > 1), "Width Resolution input is Invalid, not > 1 !"
+    return xres
+    # return (int(xResolution.get()))
 def get_yResolution():
-    assert(int(yResolution.get()) > 1)
     try:
-        return int(yResolution.get())
-    except ValueError:
-        raise Exception("Height Resolution input not valid")
+        yres = int(yResolution.get())
+    except Exception:
+        raise ValueError("Height Resolution Input is Invalid!")
+    assert(yres > 1), "Height Resolution input is Invalid, not > 1 !"
+    return yres
     
 def createFunktion(string: str):
     def func(x):

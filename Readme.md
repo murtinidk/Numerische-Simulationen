@@ -9,10 +9,12 @@ Figo Tobias, Ram Abhay, Martin Thalmayr
 - Extern Verwendete packages:
   - numpy
   - scipy.linalg.spsolve (calculate.py)
-  # not used - scikit-learn (balltree, nearest neighbor search)
+  - \# not used - scikit-learn (balltree, nearest neighbor search)
   - tkinter (GUI)
   - pickle (Serialisieren/Speichern von Daten)
   - h5py (Output Writer, exportRes.py: Autor: Klaus Roppert, IGTE, 2022)
   
 Example usage:
 ```python /src/main.py```
+
+![alt text](image.png)
